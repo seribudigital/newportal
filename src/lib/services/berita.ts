@@ -2,6 +2,7 @@ import {
   collection, 
   doc, 
   getDocs, 
+  getDoc,
   addDoc, 
   updateDoc, 
   deleteDoc, 
@@ -51,6 +52,19 @@ export async function getBeritaBySlug(slug: string): Promise<Berita | null> {
     }
   } catch (err) {
     console.error('Error fetching berita by slug:', err);
+  }
+  return null;
+}
+
+export async function getBeritaById(id: string): Promise<Berita | null> {
+  try {
+    const docRef = doc(db, COLLECTION_NAME, id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...(docSnap.data() as object) } as unknown as Berita;
+    }
+  } catch (err) {
+    console.error('Error fetching berita by id:', err);
   }
   return null;
 }

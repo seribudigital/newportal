@@ -31,14 +31,17 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Attempt to make file public or get signed/public URL
+      let publicUrl = "";
       try {
-        await gcsFile.makePublic();
+        const [signedUrl] = await gcsFile.getSignedUrl({
+          action: "read",
+          expires: "2500-01-01",
+        });
+        publicUrl = signedUrl;
       } catch {
-        // If makePublic is restricted, generate public download URL format
+        publicUrl = `https://storage.googleapis.com/${bucketName}/${destination}`;
       }
 
-      const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(destination)}?alt=media`;
       return NextResponse.json({ url: publicUrl, success: true });
     } catch (storageErr) {
       console.warn("Direct Cloud Storage upload failed, converting to optimized inline Data URL:", storageErr);

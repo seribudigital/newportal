@@ -124,6 +124,13 @@ export default function AdminBeritaListPage() {
                       )}
                     </td>
                     <td className="p-4 text-right space-x-2">
+                      <Link
+                        href={`/admin/berita/edit/${item.id}`}
+                        className={buttonVariants({ variant: "outline", size: "xs" }) + " text-primary hover:bg-primary/10 border-primary/20 font-semibold"}
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        <span>Edit</span>
+                      </Link>
                       <Button
                         variant="outline"
                         size="xs"
