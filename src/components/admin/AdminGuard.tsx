@@ -32,7 +32,12 @@ export function AdminGuard({ children, requiredRole, requiredJenjang }: AdminGua
   }
 
   if (!user || !profile) {
-    return null;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-xs font-semibold text-muted-foreground">Mengarahkan Halaman...</p>
+      </div>
+    );
   }
 
   // Access check

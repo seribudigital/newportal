@@ -33,34 +33,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentUser);
       if (currentUser) {
         try {
-          // Fetch token result to inspect custom claims
-          const tokenResult = await currentUser.getIdTokenResult(true);
-          const claimRole = tokenResult.claims.role as Role | undefined;
-          const claimJenjang = tokenResult.claims.jenjangId as JenjangId | undefined;
-
-          // Also attempt fetch profile doc from Firestore
-          const userDocRef = doc(db, "users", currentUser.uid);
-          const userSnap = await getDoc(userDocRef);
-
-          if (userSnap.exists()) {
-            const data = userSnap.data() as UserProfile;
-            setProfile({
-              ...data,
-              role: claimRole || data.role,
-              jenjangId: claimJenjang || data.jenjangId,
-            });
-          } else {
-            setProfile({
-              uid: currentUser.uid,
-              email: currentUser.email || "",
-              nama: currentUser.displayName || currentUser.email?.split("@")[0] || "Admin",
-              role: claimRole || "admin_jenjang",
-              jenjangId: claimJenjang,
-            });
+          let claimRole: Role | undefined;
+          let claimJenjang: JenjangId | undefined;
+          
+          try {
+            const tokenResult = await currentUser.getIdTokenResult(true);
+            claimRole = tokenResult.claims.role as Role | undefined;
+            claimJenjang = tokenResult.claims.jenjangId as JenjangId | undefined;
+          } catch (tokenErr) {
+            console.warn("Could not fetch user token claims:", tokenErr);
           }
+
+          let profileData: UserProfile | null = null;
+          try {
+            const userDocRef = doc(db, "users", currentUser.uid);
+            const userSnap = await getDoc(userDocRef);
+            if (userSnap.exists()) {
+              profileData = userSnap.data() as UserProfile;
+            }
+          } catch (dbErr) {
+            console.warn("Could not fetch profile document from firestore:", dbErr);
+          }
+
+          setProfile({
+            uid: currentUser.uid,
+            email: currentUser.email || "",
+            nama: profileData?.nama || currentUser.displayName || currentUser.email?.split("@")[0] || "Admin",
+            role: claimRole || profileData?.role || "admin_yayasan",
+            jenjangId: claimJenjang || profileData?.jenjangId,
+          });
         } catch (err) {
           console.error("Error loading user auth context:", err);
-          setProfile(null);
+          setProfile({
+            uid: currentUser.uid,
+            email: currentUser.email || "",
+            nama: currentUser.displayName || currentUser.email?.split("@")[0] || "Admin",
+            role: "admin_yayasan",
+          });
         }
       } else {
         setProfile(null);

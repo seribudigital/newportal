@@ -1,25 +1,27 @@
-import admin from 'firebase-admin';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getAuth, UserRecord } from 'firebase-admin/auth';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
 import { INITIAL_JENJANG } from '../src/lib/seedData';
 
 dotenv.config({ path: '.env.local' });
 
-if (!admin.apps.length) {
+if (!getApps().length) {
   const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (serviceAccountEnv) {
     try {
       const sa = JSON.parse(serviceAccountEnv);
-      admin.initializeApp({ credential: admin.credential.cert(sa) });
+      initializeApp({ credential: cert(sa) });
     } catch {
-      admin.initializeApp({ projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID });
+      initializeApp({ projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID });
     }
   } else {
-    admin.initializeApp({ projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-portal-sekolah' });
+    initializeApp({ projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-portal-sekolah' });
   }
 }
 
-const auth = admin.auth();
-const db = admin.firestore();
+const auth = getAuth();
+const db = getFirestore();
 
 async function seed() {
   console.log('🌱 Starting idempotent seed process via Admin SDK...');
@@ -47,26 +49,26 @@ async function seed() {
         id: 'berita-selamat-datang',
         judul: 'Selamat Datang di Web Portal Resmi Yayasan Islam Terpadu',
         slug: 'selamat-datang-portal-resmi',
-        tanggal: admin.firestore.Timestamp.now(),
+        tanggal: Timestamp.now(),
         gambarUtamaUrl: '/images/hero-yayasan.jpg',
         ringkasan: 'Portal terpadu penyedia informasi 4 jenjang pendidikan Islam unggulan.',
         isi: '<p>Alhamdulillah, portal resmi sekolah yayasan Islam terpadu telah resmi dibuka untuk umum.</p>',
         status: 'published',
         createdBy: 'system_bootstrap',
-        updatedAt: admin.firestore.Timestamp.now(),
+        updatedAt: Timestamp.now(),
       },
       {
         id: 'berita-tkit-parenting',
         judul: 'Seminar Parenting Islam Terpadu untuk Orang Tua Murid TKIT',
         slug: 'seminar-parenting-tkit',
         jenjangId: 'tkit',
-        tanggal: admin.firestore.Timestamp.now(),
+        tanggal: Timestamp.now(),
         gambarUtamaUrl: '/images/tkit-parenting.jpg',
         ringkasan: 'Mengedukasi orang tua dalam membangun kemandirian dan karakter Rabbani anak usia dini.',
         isi: '<p>Kegiatan parenting diikuti oleh seluruh wali santri TKIT dengan antusiasme tinggi.</p>',
         status: 'published',
         createdBy: 'system_bootstrap',
-        updatedAt: admin.firestore.Timestamp.now(),
+        updatedAt: Timestamp.now(),
       }
     ];
 
@@ -80,14 +82,14 @@ async function seed() {
         id: 'galeri-yayasan-1',
         judul: 'Upacara Peringatan Hari Pendidikan Islam',
         imageUrl: '/images/galeri-1.jpg',
-        tanggal: admin.firestore.Timestamp.now(),
+        tanggal: Timestamp.now(),
       },
       {
         id: 'galeri-tkit-1',
         judul: 'Manasik Haji Cilik Santri TKIT',
         imageUrl: '/images/galeri-tkit.jpg',
         jenjangId: 'tkit',
-        tanggal: admin.firestore.Timestamp.now(),
+        tanggal: Timestamp.now(),
       }
     ];
 
@@ -112,7 +114,7 @@ async function seed() {
     }
 
     // 5. Bootstrap Super Admin securely using ENV vars
-    let userRecord: admin.auth.UserRecord;
+    let userRecord: UserRecord;
 
     try {
       userRecord = await auth.getUserByEmail(adminEmail);
