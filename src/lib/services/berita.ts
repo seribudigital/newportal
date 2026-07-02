@@ -2,7 +2,6 @@ import {
   collection, 
   doc, 
   getDocs, 
-  getDoc, 
   addDoc, 
   updateDoc, 
   deleteDoc, 
@@ -42,13 +41,20 @@ export async function getBeritaBySlug(slug: string): Promise<Berita | null> {
 }
 
 export async function createBerita(data: Omit<Berita, 'id'>): Promise<string> {
-  const docRef = await addDoc(collection(db, COLLECTION_NAME), data);
+  // Clean undefined values to prevent Firestore Unsupported field value: undefined error
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([_, v]) => v !== undefined)
+  );
+  const docRef = await addDoc(collection(db, COLLECTION_NAME), cleanData);
   return docRef.id;
 }
 
 export async function updateBerita(id: string, data: Partial<Berita>): Promise<void> {
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([_, v]) => v !== undefined)
+  );
   const docRef = doc(db, COLLECTION_NAME, id);
-  await updateDoc(docRef, data);
+  await updateDoc(docRef, cleanData);
 }
 
 export async function deleteBerita(id: string): Promise<void> {

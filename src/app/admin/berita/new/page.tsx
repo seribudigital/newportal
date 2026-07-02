@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { createBerita } from "@/lib/services/berita";
 import { Timestamp } from "firebase/firestore";
-import type { StatusKonten, JenjangId } from "@/types";
+import type { StatusKonten, JenjangId, Berita } from "@/types";
 
 export default function AdminBeritaCreatePage() {
   const { profile, isYayasanAdmin } = useAuth();
@@ -51,10 +51,13 @@ export default function AdminBeritaCreatePage() {
     }
 
     try {
-      await createBerita({
+      const targetJenjang = isYayasanAdmin 
+        ? (jenjangId ? (jenjangId as JenjangId) : undefined)
+        : profile?.jenjangId;
+
+      const beritaPayload: Omit<Berita, 'id'> = {
         judul,
         slug,
-        jenjangId: (isYayasanAdmin ? (jenjangId as JenjangId || undefined) : profile?.jenjangId),
         tanggal: Timestamp.now(),
         gambarUtamaUrl,
         ringkasan,
@@ -62,7 +65,13 @@ export default function AdminBeritaCreatePage() {
         status,
         createdBy: profile?.uid || "admin",
         updatedAt: Timestamp.now(),
-      });
+      };
+
+      if (targetJenjang) {
+        beritaPayload.jenjangId = targetJenjang;
+      }
+
+      await createBerita(beritaPayload);
 
       router.push("/admin/berita");
     } catch (err) {
