@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Calendar, User, ArrowLeft, Share2 } from "lucide-react";
+import { Calendar, ArrowLeft } from "lucide-react";
 import { getBeritaList, getBeritaBySlug } from "@/lib/services/berita";
 import { SafeHtmlRenderer } from "@/components/ui/SafeHtmlRenderer";
 
-export const revalidate = 60;
+export const revalidate = 0;
+export const dynamicParams = true;
 
 interface BeritaDetailPageProps {
   params: Promise<{
@@ -13,28 +14,54 @@ interface BeritaDetailPageProps {
   }>;
 }
 
+function formatTanggal(tanggal: any): string {
+  if (!tanggal) return "Terbaru";
+  try {
+    if (typeof tanggal?.toDate === "function") {
+      return tanggal.toDate().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    }
+    if (tanggal?.seconds) {
+      return new Date(tanggal.seconds * 1000).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    }
+    if (typeof tanggal === "string" || typeof tanggal === "number") {
+      return new Date(tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    }
+  } catch {
+    // ignore
+  }
+  return "Terbaru";
+}
+
 export async function generateStaticParams() {
-  const beritaList = await getBeritaList(undefined, true).catch(() => []);
-  return beritaList.map((b) => ({ slug: b.slug }));
+  try {
+    const beritaList = await getBeritaList(undefined, true);
+    return beritaList.map((b) => ({ slug: b.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: BeritaDetailPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const berita = await getBeritaBySlug(slug);
+  try {
+    const { slug } = await params;
+    const berita = await getBeritaBySlug(slug);
 
-  if (!berita || berita.status !== "published") {
-    return { title: "Berita Tidak Ditemukan" };
-  }
+    if (!berita || berita.status !== "published") {
+      return { title: "Berita Tidak Ditemukan" };
+    }
 
-  return {
-    title: `${berita.judul} - Portal Sekolah Islam Terpadu`,
-    description: berita.ringkasan,
-    openGraph: {
-      title: berita.judul,
+    return {
+      title: `${berita.judul} - Portal Sekolah Islam Terpadu`,
       description: berita.ringkasan,
-      images: berita.gambarUtamaUrl ? [berita.gambarUtamaUrl] : [],
-    },
-  };
+      openGraph: {
+        title: berita.judul,
+        description: berita.ringkasan,
+        images: berita.gambarUtamaUrl ? [berita.gambarUtamaUrl] : [],
+      },
+    };
+  } catch {
+    return { title: "Portal Sekolah Islam Terpadu" };
+  }
 }
 
 export default async function BeritaDetailPage({ params }: BeritaDetailPageProps) {
@@ -66,11 +93,7 @@ export default async function BeritaDetailPage({ params }: BeritaDetailPageProps
             </span>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Calendar className="w-3.5 h-3.5 text-gold-600" />
-              <span>
-                {berita.tanggal?.toDate 
-                  ? berita.tanggal.toDate().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) 
-                  : 'Terbaru'}
-              </span>
+              <span>{formatTanggal(berita.tanggal)}</span>
             </div>
           </div>
 
