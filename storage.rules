@@ -1,0 +1,42 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isYayasan() {
+      return isAuthenticated() && request.auth.token.role == 'admin_yayasan';
+    }
+
+    function isJenjangAdmin(jenjangId) {
+      return isAuthenticated() 
+        && request.auth.token.role == 'admin_jenjang' 
+        && request.auth.token.jenjangId == jenjangId;
+    }
+
+    // Media & Konten Publik: READ diperbolehkan untuk SEMUA ORANG
+    match /media/{jenjangId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isYayasan() || isJenjangAdmin(jenjangId);
+    }
+
+    match /media/yayasan/{allPaths=**} {
+      allow read: if true;
+      allow write: if isYayasan();
+    }
+
+    // Berkas Pendaftaran PPDB (Calon pendaftar boleh upload berkas pendaftaran, read hanya untuk admin)
+    match /ppdb/{jenjangId}/{allPaths=**} {
+      allow create: if request.resource.size < 5 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf');
+      allow read, update, delete: if isYayasan() || isJenjangAdmin(jenjangId);
+    }
+
+    // Default-deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

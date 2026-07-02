@@ -1,0 +1,48 @@
+import type { Jenjang } from '../types';
+
+export const INITIAL_JENJANG: Jenjang[] = [
+  {
+    id: 'tkit',
+    nama: 'Taman Kanak-Kanak Islam Terpadu',
+    slug: 'tkit',
+    deskripsi: 'Pendidikan anak usia dini berbasis pembentukan karakter Islami, kemandirian, dan kecerdasan motorik.',
+    visiMisi: '<p><strong>Visi:</strong> Terwujudnya generasi Rabbani yang ceria, mandiri, dan berakhlak mulia.</p>',
+    warnaAksen: '#10b981',
+    logoUrl: '/images/tkit-logo.png',
+    kepalaSekolah: 'Ustadzah Fatimah, S.Pd.I',
+    akreditasi: 'A (Unggul)',
+  },
+  {
+    id: 'sdit',
+    nama: 'Sekolah Dasar Islam Terpadu',
+    slug: 'sdit',
+    deskripsi: 'Pendidikan dasar yang memadukan Kurikulum Merdeka dengan nilai-nilai Al-Qur’an dan karakter Rabbani.',
+    visiMisi: '<p><strong>Visi:</strong> Membentuk pribadi cerdas, hapal Al-Qur’an, dan unggul dalam prestasi.</p>',
+    warnaAksen: '#0284c7',
+    logoUrl: '/images/sdit-logo.png',
+    kepalaSekolah: 'Ustadz Ahmad Fauzi, M.Pd.',
+    akreditasi: 'A (Unggul)',
+  },
+  {
+    id: 'mts',
+    nama: 'Madrasah Tsanawiyah Islam Terpadu',
+    slug: 'mts',
+    deskripsi: 'Jenjang menengah pertama unggulan sains, bahasa Arab/Inggris, serta tahfizh Al-Qur’an.',
+    visiMisi: '<p><strong>Visi:</strong> Menjadi madrasah unggul berbasis IPTEK dan IMTAK di tingkat nasional.</p>',
+    warnaAksen: '#0f766e',
+    logoUrl: '/images/mts-logo.png',
+    kepalaSekolah: 'Dr. H. Muhammad Ridwan, Lc., M.A.',
+    akreditasi: 'A (Unggul)',
+  },
+  {
+    id: 'ma',
+    nama: 'Madrasah Aliyah Islam Terpadu',
+    slug: 'ma',
+    deskripsi: 'Jenjang menengah atas persiapan perguruan tinggi favorit dalam/luar negeri dengan pendalaman kitab kuning & sains.',
+    visiMisi: '<p><strong>Visi:</strong> Mencetak calon pemimpin masa depan yang berwawasan global dan bertafaqquh fiddin.</p>',
+    warnaAksen: '#15803d',
+    logoUrl: '/images/ma-logo.png',
+    kepalaSekolah: 'Ustadz Abdullah Al-Mansur, M.Ag.',
+    akreditasi: 'A (Unggul)',
+  },
+];
