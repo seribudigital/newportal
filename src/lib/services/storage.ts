@@ -1,5 +1,3 @@
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase";
 import type { JenjangId } from "@/types";
 
 export interface UploadResult {
@@ -8,10 +6,8 @@ export interface UploadResult {
 }
 
 /**
- * Upload asset image/file to Firebase Storage into role-safe folders.
- * Path pattern:
- * - /media/{jenjangId}/{fileName} for jenjang specific assets
- * - /media/yayasan/{fileName} for main portal assets
+ * Upload asset image/file via server API endpoint (/api/upload)
+ * Bypasses browser CORS restrictions completely.
  */
 export async function uploadMediaFile(
   file: File,
@@ -19,33 +15,32 @@ export async function uploadMediaFile(
   onProgress?: (percent: number) => void
 ): Promise<UploadResult> {
   const folder = jenjangId ? `media/${jenjangId}` : "media/yayasan";
-  const timestamp = Date.now();
-  const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-  const filePath = `${folder}/${timestamp}_${cleanFileName}`;
+  
+  if (onProgress) onProgress(30);
 
-  const storageRef = ref(storage, filePath);
-  const uploadTask = uploadBytesResumable(storageRef, file);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
 
-  return new Promise((resolve, reject) => {
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        if (onProgress) onProgress(Math.round(progress));
-      },
-      (error) => {
-        console.error("Firebase Storage Upload Error:", error);
-        reject(error);
-      },
-      async () => {
-        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-        resolve({
-          url: downloadUrl,
-          fullPath: filePath,
-        });
-      }
-    );
+  if (onProgress) onProgress(60);
+
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
   });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Gagal mengunggah gambar ke server.");
+  }
+
+  if (onProgress) onProgress(100);
+
+  const data = await res.json();
+  return {
+    url: data.url,
+    fullPath: folder,
+  };
 }
 
 export interface PPDBUploadResult extends UploadResult {
@@ -54,40 +49,38 @@ export interface PPDBUploadResult extends UploadResult {
 }
 
 /**
- * Upload berkas pendaftaran PPDB ke Firebase Storage pada path private `/ppdb/{jenjangId}/{timestamp}_{cleanFileName}`
+ * Upload berkas pendaftaran PPDB ke server API
  */
 export async function uploadPPDBFile(
   file: File,
   jenjangId: JenjangId,
   onProgress?: (percent: number) => void
 ): Promise<PPDBUploadResult> {
-  const timestamp = Date.now();
-  const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-  const filePath = `ppdb/${jenjangId}/${timestamp}_${cleanFileName}`;
+  const folder = `ppdb/${jenjangId}`;
+  
+  if (onProgress) onProgress(40);
 
-  const storageRef = ref(storage, filePath);
-  const uploadTask = uploadBytesResumable(storageRef, file);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
 
-  return new Promise((resolve, reject) => {
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        if (onProgress) onProgress(Math.round(progress));
-      },
-      (error) => {
-        console.error("Firebase Storage PPDB Upload Error:", error);
-        reject(error);
-      },
-      async () => {
-        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-        resolve({
-          url: downloadUrl,
-          fullPath: filePath,
-          fileSize: file.size,
-          fileType: file.type,
-        });
-      }
-    );
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
   });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Gagal mengunggah berkas PPDB.");
+  }
+
+  if (onProgress) onProgress(100);
+
+  const data = await res.json();
+  return {
+    url: data.url,
+    fullPath: folder,
+    fileSize: file.size,
+    fileType: file.type,
+  };
 }
