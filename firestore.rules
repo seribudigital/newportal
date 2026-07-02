@@ -2,106 +2,41 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper Functions
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function isYayasan() {
-      return isAuthenticated() && request.auth.token.role == 'admin_yayasan';
-    }
+    // Public Read / Authenticated Admin Write Rules
+    match /jenjang/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /berita/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /guru/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /siswa/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /program/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /prestasi/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /pengurus/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /agenda/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /galeri/{id} { allow read: if true; allow write: if isAuthenticated(); }
+    match /settings/{id} { allow read: if true; allow write: if isAuthenticated(); }
 
-    function isJenjangAdmin(jenjangId) {
-      return isAuthenticated() 
-        && request.auth.token.role == 'admin_jenjang' 
-        && request.auth.token.jenjangId == jenjangId;
-    }
-
-    function hasJenjangId(resourceData) {
-      return resourceData != null && ('jenjangId' in resourceData) && resourceData.jenjangId != null;
-    }
-
-    // 1. Jenjang (Profil 4 jenjang)
-    match /jenjang/{jenjangId} {
-      allow read: if true;
-      allow write: if isYayasan() || isJenjangAdmin(jenjangId);
-    }
-
-    // 2. Berita & Artikel
-    match /berita/{id} {
-      allow read: if true;
-      allow write: if isYayasan() || 
-        (hasJenjangId(request.resource.data) && isJenjangAdmin(request.resource.data.jenjangId));
-    }
-
-    // 3. Guru, Siswa, Program, Prestasi
-    match /guru/{id} {
-      allow read: if true;
-      allow write: if isYayasan() || 
-        (hasJenjangId(request.resource.data) && isJenjangAdmin(request.resource.data.jenjangId));
-    }
-    match /siswa/{id} {
-      allow read: if true;
-      allow write: if isYayasan() || 
-        (hasJenjangId(request.resource.data) && isJenjangAdmin(request.resource.data.jenjangId));
-    }
-    match /program/{id} {
-      allow read: if true;
-      allow write: if isYayasan() || 
-        (hasJenjangId(request.resource.data) && isJenjangAdmin(request.resource.data.jenjangId));
-    }
-    match /prestasi/{id} {
-      allow read: if true;
-      allow write: if isYayasan() || 
-        (hasJenjangId(request.resource.data) && isJenjangAdmin(request.resource.data.jenjangId));
-    }
-
-    // 4. Pengurus, Agenda, Galeri
-    match /pengurus/{id} {
-      allow read: if true;
-      allow write: if isYayasan() || 
-        (hasJenjangId(request.resource.data) && isJenjangAdmin(request.resource.data.jenjangId));
-    }
-    match /agenda/{id} {
-      allow read: if true;
-      allow write: if isYayasan() || 
-        (hasJenjangId(request.resource.data) && isJenjangAdmin(request.resource.data.jenjangId));
-    }
-    match /galeri/{id} {
-      allow read: if true;
-      allow write: if isYayasan() || 
-        (hasJenjangId(request.resource.data) && isJenjangAdmin(request.resource.data.jenjangId));
-    }
-
-    // 5. PPDB & Pesan Kontak Public Form Submissions
+    // Public Form Submissions
     match /pendaftaranPPDB/{id} {
-      allow create: if request.resource.data.status == 'baru' 
-        && hasJenjangId(request.resource.data);
-      allow read, delete: if isYayasan() || 
-        (hasJenjangId(resource.data) && isJenjangAdmin(resource.data.jenjangId));
-      allow update: if isYayasan() || 
-        (hasJenjangId(resource.data) && isJenjangAdmin(resource.data.jenjangId) && isJenjangAdmin(request.resource.data.jenjangId));
+      allow create: if true;
+      allow read, update, delete: if isAuthenticated();
     }
     match /pesanKontak/{id} {
-      allow create: if true; // Publik boleh kirim pesan kontak
-      allow read, update, delete: if isYayasan();
+      allow create: if true;
+      allow read, update, delete: if isAuthenticated();
     }
 
-    // 6. User Profiles
+    // User Accounts
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isYayasan());
-      allow write: if isYayasan();
+      allow read, write: if isAuthenticated();
     }
 
-    // 7. Pengaturan Situs Global
-    match /settings/{id} {
-      allow read: if true;
-      allow write: if isYayasan();
-    }
-
-    // DEFAULT-DENY FALLBACK
+    // Fallback Catch-all for Authenticated Admin Users
     match /{document=**} {
-      allow read, write: if false;
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
   }
 }
