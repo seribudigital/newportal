@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/authContext";
 import { ArrowLeft, Save, Loader2, AlertCircle } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 import { createBerita } from "@/lib/services/berita";
 import { Timestamp } from "firebase/firestore";
 import type { StatusKonten, JenjangId } from "@/types";
@@ -29,7 +30,6 @@ export default function AdminBeritaCreatePage() {
   const handleJudulChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setJudul(val);
-    // Auto-generate slug
     setSlug(
       val
         .toLowerCase()
@@ -172,16 +172,13 @@ export default function AdminBeritaCreatePage() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">URL Gambar Utama / Thumbnail</label>
-              <input
-                type="text"
-                value={gambarUtamaUrl}
-                onChange={(e) => setGambarUtamaUrl(e.target.value)}
-                placeholder="/images/berita-1.jpg atau https://..."
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
+            {/* Image Uploader Component */}
+            <ImageUploader
+              value={gambarUtamaUrl}
+              onChange={setGambarUtamaUrl}
+              jenjangId={jenjangId as JenjangId}
+              label="Gambar Utama / Thumbnail Berita"
+            />
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground">

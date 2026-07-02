@@ -5,12 +5,13 @@ import { useAuth } from "@/lib/authContext";
 import { UserCheck, PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 import { getPengurusYayasan } from "@/lib/services/publikExtra";
 import { createDocument, deleteDocument } from "@/lib/services/konten";
 import type { Pengurus, JenjangId } from "@/types";
 
 export default function AdminPengurusPage() {
-  const { profile, isYayasanAdmin } = useAuth();
+  const { profile } = useAuth();
   const [pengurusList, setPengurusList] = useState<Pengurus[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -19,6 +20,7 @@ export default function AdminPengurusPage() {
   const [organisasi, setOrganisasi] = useState("Yayasan");
   const [jabatan, setJabatan] = useState("");
   const [periode, setPeriode] = useState("2024 - 2029");
+  const [fotoUrl, setFotoUrl] = useState("");
   const [selectedJenjang, setSelectedJenjang] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -47,11 +49,11 @@ export default function AdminPengurusPage() {
         organisasi,
         jabatan,
         periode,
-        fotoUrl: "",
+        fotoUrl,
         jenjangId: selectedJenjang ? (selectedJenjang as JenjangId) : undefined,
       });
       setShowForm(false);
-      setNama(""); setJabatan("");
+      setNama(""); setJabatan(""); setFotoUrl("");
       await loadData();
     } catch (err) {
       alert("Gagal menambahkan pengurus: " + (err as Error).message);
@@ -146,6 +148,12 @@ export default function AdminPengurusPage() {
                 />
               </div>
             </div>
+
+            <ImageUploader
+              value={fotoUrl}
+              onChange={setFotoUrl}
+              label="Foto Pengurus (Opsional)"
+            />
 
             <div className="space-y-1">
               <label className="text-xs font-semibold">Cakupan (Opsional)</label>
