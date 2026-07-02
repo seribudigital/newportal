@@ -14,6 +14,15 @@ export interface UserProfile {
   jenjangId?: JenjangId;
 }
 
+export interface GlobalSettings {
+  namaYayasan: string;
+  alamat: string;
+  telepon: string;
+  email: string;
+  singkatanYayasan?: string;
+  tagline?: string;
+}
+
 export interface Jenjang {
   id: JenjangId;
   nama: string;

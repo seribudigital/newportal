@@ -1,13 +1,12 @@
-import type { Metadata } from "next";
+"use client";
+
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { KontakForm } from "@/features/kontak/KontakForm";
-
-export const metadata: Metadata = {
-  title: "Kontak & Lokasi - Yayasan Islam Terpadu",
-  description: "Informasi alamat, nomor telepon, jam operasional kantor, dan formulir kontak sekretariat yayasan.",
-};
+import { useSettings } from "@/lib/settingsContext";
 
 export default function KontakPage() {
+  const { settings } = useSettings();
+
   return (
     <main className="flex-1 py-12 md:py-20 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -39,7 +38,7 @@ export default function KontakPage() {
                 </div>
                 <h2 className="font-bold text-sm text-foreground">Alamat Kampus</h2>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Jl. Pendidikan Islam No. 123, Kompleks Terpadu Al-Hikmah, Jakarta Selatan 12340
+                  {settings?.alamat}
                 </p>
               </div>
 
@@ -49,7 +48,7 @@ export default function KontakPage() {
                 </div>
                 <h2 className="font-bold text-sm text-foreground">Telepon / WhatsApp</h2>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  (021) 7890-1234<br />+62 812-3456-7890 (Panitia PPDB)
+                  {settings?.telepon}
                 </p>
               </div>
 
@@ -59,7 +58,7 @@ export default function KontakPage() {
                 </div>
                 <h2 className="font-bold text-sm text-foreground">Email Resmi</h2>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  info@alhikmah-yit.sch.id<br />ppdb@alhikmah-yit.sch.id
+                  {settings?.email}
                 </p>
               </div>
 

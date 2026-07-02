@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { MapPin, Phone, Mail, Globe, Share2, Video } from "lucide-react";
 import { BrandLogo } from "./BrandLogo";
 import { JENJANG_MENU_ITEMS } from "./JenjangDropdown";
+import { useSettings } from "@/lib/settingsContext";
 
 export function Footer() {
+  const { settings } = useSettings();
+
   return (
     <footer className="bg-emerald-950 text-emerald-100 border-t border-gold-500/20 relative overflow-hidden">
       {/* Geometrical Background Accent Pattern */}
@@ -18,7 +23,7 @@ export function Footer() {
               <BrandLogo />
             </div>
             <p className="text-sm text-emerald-200/80 leading-relaxed font-sans">
-              Mewujudkan generasi Rabbani yang berakhlak mulia, unggul dalam sains & Qur’an, serta siap menjadi pemimpin masa depan.
+              {settings?.tagline || "Mewujudkan generasi Rabbani yang berakhlak mulia, unggul dalam sains & Qur’an, serta siap menjadi pemimpin masa depan."}
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a href="#" aria-label="Media Sosial Yayasan" className="w-9 h-9 rounded-lg bg-emerald-900/80 border border-gold-500/30 flex items-center justify-center text-gold-400 hover:bg-gold-500 hover:text-emerald-950 transition-colors">
@@ -91,15 +96,15 @@ export function Footer() {
             <ul className="flex flex-col gap-3 text-sm text-emerald-200/90">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-gold-400 shrink-0 mt-0.5" />
-                <span>Jl. Pendidikan Islam No. 123, Kompleks Terpadu Al-Hikmah</span>
+                <span>{settings?.alamat}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-gold-400 shrink-0" />
-                <span>(021) 7890-1234 / +62 812-3456-7890</span>
+                <span>{settings?.telepon}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-gold-400 shrink-0" />
-                <span>info@alhikmah-yit.sch.id</span>
+                <span>{settings?.email}</span>
               </li>
             </ul>
           </div>
@@ -108,7 +113,7 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-6 border-t border-emerald-900/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-emerald-400/80">
-          <p>© {new Date().getFullYear()} Yayasan Islam Terpadu Al-Hikmah. Seluruh Hak Cipta Dilindungi.</p>
+          <p>© {new Date().getFullYear()} {settings?.namaYayasan}. Seluruh Hak Cipta Dilindungi.</p>
           <div className="flex items-center gap-6">
             <Link href="/privasi" className="hover:text-gold-400 transition-colors">Kebijakan Privasi</Link>
             <Link href="/syarat" className="hover:text-gold-400 transition-colors">Syarat & Ketentuan</Link>
