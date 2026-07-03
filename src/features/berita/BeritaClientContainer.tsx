@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Calendar, FileText, ArrowRight, Filter } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { formatImageUrl } from "@/lib/utils/image";
 import type { Berita, JenjangId } from "@/types";
 
 interface BeritaClientContainerProps {
@@ -23,27 +24,24 @@ export function BeritaClientContainer({ initialBeritaList }: BeritaClientContain
     return initialBeritaList.filter(b => b.jenjangId === selectedFilter);
   }, [initialBeritaList, selectedFilter]);
 
-  const displayedBerita = filteredList.slice(0, visibleCount);
+  const displayedList = useMemo(() => {
+    return filteredList.slice(0, visibleCount);
+  }, [filteredList, visibleCount]);
+
   const hasMore = visibleCount < filteredList.length;
 
   return (
     <div className="space-y-8">
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-border">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mr-2">
-          <Filter className="w-3.5 h-3.5" />
-          <span>Kategori:</span>
-        </div>
-        
+      {/* Filter Tabs */}
+      <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 bg-muted/50 rounded-2xl border border-border max-w-2xl mx-auto">
         <Button
           variant={selectedFilter === "semua" ? "default" : "outline"}
           size="sm"
           onClick={() => { setSelectedFilter("semua"); setVisibleCount(6); }}
           className="rounded-full text-xs font-medium"
         >
-          Semua ({initialBeritaList.length})
+          Semua Berita
         </Button>
-
         <Button
           variant={selectedFilter === "yayasan" ? "default" : "outline"}
           size="sm"
@@ -52,7 +50,6 @@ export function BeritaClientContainer({ initialBeritaList }: BeritaClientContain
         >
           Yayasan
         </Button>
-
         <Button
           variant={selectedFilter === "tkit" ? "default" : "outline"}
           size="sm"
@@ -61,7 +58,6 @@ export function BeritaClientContainer({ initialBeritaList }: BeritaClientContain
         >
           TKIT
         </Button>
-
         <Button
           variant={selectedFilter === "sdit" ? "default" : "outline"}
           size="sm"
@@ -70,7 +66,6 @@ export function BeritaClientContainer({ initialBeritaList }: BeritaClientContain
         >
           SDIT
         </Button>
-
         <Button
           variant={selectedFilter === "mts" ? "default" : "outline"}
           size="sm"
@@ -79,7 +74,6 @@ export function BeritaClientContainer({ initialBeritaList }: BeritaClientContain
         >
           MTs
         </Button>
-
         <Button
           variant={selectedFilter === "ma" ? "default" : "outline"}
           size="sm"
@@ -91,7 +85,7 @@ export function BeritaClientContainer({ initialBeritaList }: BeritaClientContain
       </div>
 
       {/* Grid Display */}
-      {displayedBerita.length === 0 ? (
+      {displayedList.length === 0 ? (
         <div className="text-center p-12 bg-card border border-dashed border-border rounded-2xl max-w-xl mx-auto">
           <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground text-sm font-medium">
@@ -100,72 +94,75 @@ export function BeritaClientContainer({ initialBeritaList }: BeritaClientContain
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayedBerita.map((item) => (
-            <Card key={item.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all flex flex-col justify-between bg-card group">
-              <div>
-                <div className="relative w-full h-48 bg-emerald-900/10 overflow-hidden">
-                  {item.gambarUtamaUrl && !item.gambarUtamaUrl.startsWith("blob:") ? (
-                    <img
-                      src={item.gambarUtamaUrl}
-                      alt={item.judul}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          e.currentTarget.style.display = "none";
-                          const fallback = document.createElement("div");
-                          fallback.className = "w-full h-full flex items-center justify-center text-emerald-800/40 font-heading font-bold text-2xl bg-emerald-100/40";
-                          fallback.innerText = "Al-Hikmah";
-                          parent.appendChild(fallback);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-emerald-800/40 font-heading font-bold text-2xl bg-emerald-100/40">
-                      Al-Hikmah
+          {displayedList.map((item) => {
+            const formattedImg = formatImageUrl(item.gambarUtamaUrl);
+            return (
+              <Card key={item.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all flex flex-col justify-between bg-card group">
+                <div>
+                  <div className="relative w-full h-48 bg-emerald-900/10 overflow-hidden">
+                    {formattedImg ? (
+                      <img
+                        src={formattedImg}
+                        alt={item.judul}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            e.currentTarget.style.display = "none";
+                            const fallback = document.createElement("div");
+                            fallback.className = "w-full h-full flex items-center justify-center text-emerald-800/40 font-heading font-bold text-2xl bg-emerald-100/40";
+                            fallback.innerText = "Al-Hikmah";
+                            parent.appendChild(fallback);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-emerald-800/40 font-heading font-bold text-2xl bg-emerald-100/40">
+                        Al-Hikmah
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3">
+                      <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-md bg-emerald-950/80 text-gold-400 border border-gold-500/30">
+                        {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
+                      </span>
                     </div>
-                  )}
-                  <div className="absolute top-3 left-3">
-                    <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-md bg-emerald-950/80 text-gold-400 border border-gold-500/30">
-                      {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
-                    </span>
                   </div>
+
+                  <CardHeader className="p-5 pb-2">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                      <Calendar className="w-3.5 h-3.5 text-gold-600" />
+                      <span>
+                        {item.tanggal?.toDate 
+                          ? item.tanggal.toDate().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) 
+                          : 'Terbaru'}
+                      </span>
+                    </div>
+                    <CardTitle className="font-heading font-bold text-lg leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                      <Link href={`/berita/${item.slug}`}>
+                        {item.judul}
+                      </Link>
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent className="px-5 pb-5 pt-0">
+                    <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
+                      {item.ringkasan}
+                    </p>
+                  </CardContent>
                 </div>
 
-                <CardHeader className="p-5 pb-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                    <Calendar className="w-3.5 h-3.5 text-gold-600" />
-                    <span>
-                      {item.tanggal?.toDate 
-                        ? item.tanggal.toDate().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) 
-                        : 'Terbaru'}
-                    </span>
-                  </div>
-                  <CardTitle className="font-heading font-bold text-lg leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                    <Link href={`/berita/${item.slug}`}>
-                      {item.judul}
-                    </Link>
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent className="px-5 pb-5 pt-0">
-                  <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
-                    {item.ringkasan}
-                  </p>
-                </CardContent>
-              </div>
-
-              <div className="p-5 pt-0">
-                <Link
-                  href={`/berita/${item.slug}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary group-hover:text-emerald-800 transition-colors"
-                >
-                  <span>Baca Selengkapnya</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </Card>
-          ))}
+                <div className="p-5 pt-0">
+                  <Link
+                    href={`/berita/${item.slug}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary group-hover:text-emerald-800 transition-colors"
+                  >
+                    <span>Baca Selengkapnya</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
 

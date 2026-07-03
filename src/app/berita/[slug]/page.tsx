@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Calendar, ArrowLeft } from "lucide-react";
 import { getBeritaList, getBeritaBySlug } from "@/lib/services/berita";
 import { SafeHtmlRenderer } from "@/components/ui/SafeHtmlRenderer";
+import { formatImageUrl } from "@/lib/utils/image";
 
 export const revalidate = 0;
 export const dynamicParams = true;
@@ -107,19 +108,22 @@ export default async function BeritaDetailPage({ params }: BeritaDetailPageProps
         </div>
 
         {/* Main Banner Image */}
-        {berita.gambarUtamaUrl && !berita.gambarUtamaUrl.startsWith("blob:") && (
-          <div className="w-full h-[300px] sm:h-[420px] rounded-2xl overflow-hidden bg-emerald-900/10 border border-border">
-            <img
-              src={berita.gambarUtamaUrl}
-              alt={berita.judul}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                const parent = e.currentTarget.parentElement;
-                if (parent) parent.style.display = "none";
-              }}
-            />
-          </div>
-        )}
+        {(() => {
+          const bannerUrl = formatImageUrl(berita.gambarUtamaUrl);
+          return bannerUrl ? (
+            <div className="w-full h-[300px] sm:h-[420px] rounded-2xl overflow-hidden bg-emerald-900/10 border border-border">
+              <img
+                src={bannerUrl}
+                alt={berita.judul}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) parent.style.display = "none";
+                }}
+              />
+            </div>
+          ) : null;
+        })()}
 
         {/* Sanitized Rich Text Content */}
         <div className="pt-4 border-t border-border">

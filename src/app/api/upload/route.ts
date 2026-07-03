@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminStorage } from "@/lib/firebaseAdmin";
+import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,24 +24,22 @@ export async function POST(req: NextRequest) {
     try {
       const bucket = adminStorage.bucket(bucketName);
       const gcsFile = bucket.file(destination);
+      const downloadToken = crypto.randomUUID();
 
       await gcsFile.save(buffer, {
         metadata: {
           contentType: file.type || "image/jpeg",
           cacheControl: "public, max-age=31536000",
+          metadata: {
+            firebaseStorageDownloadTokens: downloadToken,
+          },
         },
       });
 
-      let publicUrl = "";
-      try {
-        const [signedUrl] = await gcsFile.getSignedUrl({
-          action: "read",
-          expires: "2500-01-01",
-        });
-        publicUrl = signedUrl;
-      } catch {
-        publicUrl = `https://storage.googleapis.com/${bucketName}/${destination}`;
-      }
+      await gcsFile.makePublic().catch(() => {});
+
+      const encodedPath = encodeURIComponent(destination);
+      const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media&token=${downloadToken}`;
 
       return NextResponse.json({ url: publicUrl, success: true });
     } catch (storageErr) {

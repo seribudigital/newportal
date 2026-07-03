@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Upload, X, Loader2, Image as ImageIcon, Link2 } from "lucide-react";
 import { uploadMediaFile } from "@/lib/services/storage";
 import { Button } from "@/components/ui/button";
+import { formatImageUrl } from "@/lib/utils/image";
 import type { JenjangId } from "@/types";
 
 interface ImageUploaderProps {
@@ -74,6 +75,7 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
     }
   };
 
+  const previewUrl = formatImageUrl(value);
   const isBlobUrl = value?.startsWith("blob:");
 
   return (
@@ -92,10 +94,10 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
         )}
       </div>
 
-      {value && !imgError && !isBlobUrl ? (
+      {previewUrl && !imgError && !isBlobUrl ? (
         <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-border bg-emerald-950/10 group">
           <img
-            src={value}
+            src={previewUrl}
             alt="Preview Upload"
             className="w-full h-full object-cover"
             onError={() => setImgError(true)}

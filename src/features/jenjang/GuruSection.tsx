@@ -1,5 +1,6 @@
 import { UserCheck, Users, GraduationCap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatImageUrl } from "@/lib/utils/image";
 import type { Guru } from "@/types";
 
 interface GuruSectionProps {
@@ -33,31 +34,33 @@ export function GuruSection({ guruList, jenjangNama }: GuruSectionProps) {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {guruList.map((guru) => (
-              <Card key={guru.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all bg-card text-center group">
-                <div className="w-full h-48 bg-emerald-900/10 relative overflow-hidden">
-                  {guru.fotoUrl && !guru.fotoUrl.startsWith("blob:") ? (
-                    <img
-                      src={guru.fotoUrl}
-                      alt={guru.nama}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          e.currentTarget.style.display = "none";
-                          const fallback = document.createElement("div");
-                          fallback.className = "w-full h-full flex items-center justify-center bg-emerald-100/50 text-emerald-900 font-heading font-bold text-3xl";
-                          fallback.innerText = guru.nama.charAt(0);
-                          parent.appendChild(fallback);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-emerald-100/50 text-emerald-900 font-heading font-bold text-3xl">
-                      {guru.nama.charAt(0)}
-                    </div>
-                  )}
-                </div>
+            {guruList.map((guru) => {
+              const avatarUrl = formatImageUrl(guru.fotoUrl);
+              return (
+                <Card key={guru.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all bg-card text-center group">
+                  <div className="w-full h-48 bg-emerald-900/10 relative overflow-hidden">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={guru.nama}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            e.currentTarget.style.display = "none";
+                            const fallback = document.createElement("div");
+                            fallback.className = "w-full h-full flex items-center justify-center bg-emerald-100/50 text-emerald-900 font-heading font-bold text-3xl";
+                            fallback.innerText = guru.nama.charAt(0);
+                            parent.appendChild(fallback);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-emerald-100/50 text-emerald-900 font-heading font-bold text-3xl">
+                        {guru.nama.charAt(0)}
+                      </div>
+                    )}
+                  </div>
                 <CardContent className="p-4 space-y-1">
                   <h3 className="font-heading font-bold text-base text-foreground leading-snug group-hover:text-primary transition-colors">
                     {guru.nama}
@@ -70,8 +73,9 @@ export function GuruSection({ guruList, jenjangNama }: GuruSectionProps) {
                   </p>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            );
+          })}
+        </div>
         )}
       </div>
     </section>

@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Image as ImageIcon, Filter, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatImageUrl } from "@/lib/utils/image";
 import type { Galeri, JenjangId } from "@/types";
 
 interface GaleriClientContainerProps {
@@ -109,31 +110,40 @@ export function GaleriClientContainer({ initialGaleriList }: GaleriClientContain
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {filteredList.map((item) => (
-            <div
-              key={item.id}
-              className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden bg-emerald-950/20 border border-border shadow-xs hover:shadow-xl transition-all duration-300"
-            >
-              <img
-                src={item.imageUrl}
-                alt={item.judul}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
+          {filteredList.map((item) => {
+            const imgUrl = formatImageUrl(item.imageUrl);
+            return (
+              <div
+                key={item.id}
+                className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden bg-emerald-950/20 border border-border shadow-xs hover:shadow-xl transition-all duration-300"
+              >
+                {imgUrl ? (
+                  <img
+                    src={imgUrl}
+                    alt={item.judul}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-emerald-950/40 text-gold-400">
+                    <ImageIcon className="w-8 h-8 opacity-40" />
+                  </div>
+                )}
               <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/20 to-transparent opacity-85 group-hover:opacity-95 transition-opacity" />
 
-              <div className="absolute bottom-0 inset-x-0 p-4 text-white flex flex-col justify-end">
-                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gold-500 text-emerald-950 w-fit mb-1">
-                  {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
-                </span>
-                <h3 className="font-heading font-semibold text-sm line-clamp-2 group-hover:text-gold-300 transition-colors">
-                  {item.judul}
-                </h3>
+                <div className="absolute bottom-0 inset-x-0 p-4 text-white flex flex-col justify-end">
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gold-500 text-emerald-950 w-fit mb-1">
+                    {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
+                  </span>
+                  <h3 className="font-heading font-semibold text-sm line-clamp-2 group-hover:text-gold-300 transition-colors">
+                    {item.judul}
+                  </h3>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
