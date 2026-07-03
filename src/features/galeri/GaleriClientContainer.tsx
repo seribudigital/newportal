@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
-import { Image as ImageIcon, Filter, ExternalLink } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatImageUrl } from "@/lib/utils/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import type { Galeri, JenjangId } from "@/types";
 
 interface GaleriClientContainerProps {
@@ -24,80 +23,56 @@ export function GaleriClientContainer({ initialGaleriList }: GaleriClientContain
 
   return (
     <div className="space-y-8">
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-border">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mr-2">
-            <Filter className="w-3.5 h-3.5" />
-            <span>Filter Foto:</span>
-          </div>
-
-          <Button
-            variant={selectedFilter === "semua" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFilter("semua")}
-            className="rounded-full text-xs font-medium"
-          >
-            Semua ({initialGaleriList.length})
-          </Button>
-
-          <Button
-            variant={selectedFilter === "yayasan" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFilter("yayasan")}
-            className="rounded-full text-xs font-medium"
-          >
-            Yayasan
-          </Button>
-
-          <Button
-            variant={selectedFilter === "tkit" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFilter("tkit")}
-            className="rounded-full text-xs font-medium"
-          >
-            TKIT
-          </Button>
-
-          <Button
-            variant={selectedFilter === "sdit" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFilter("sdit")}
-            className="rounded-full text-xs font-medium"
-          >
-            SDIT
-          </Button>
-
-          <Button
-            variant={selectedFilter === "mts" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFilter("mts")}
-            className="rounded-full text-xs font-medium"
-          >
-            MTs
-          </Button>
-
-          <Button
-            variant={selectedFilter === "ma" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedFilter("ma")}
-            className="rounded-full text-xs font-medium"
-          >
-            MA
-          </Button>
-        </div>
-
-        {/* Tautan Cepat Ke Halaman Spesifik Jenjang */}
-        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-          <span>Ke Galeri Halaman Jenjang:</span>
-          <Link href="/jenjang/tkit#galeri" className="text-emerald-700 hover:underline">TKIT</Link>
-          <span>•</span>
-          <Link href="/jenjang/sdit#galeri" className="text-emerald-700 hover:underline">SDIT</Link>
-          <span>•</span>
-          <Link href="/jenjang/mts#galeri" className="text-emerald-700 hover:underline">MTs</Link>
-          <span>•</span>
-          <Link href="/jenjang/ma#galeri" className="text-emerald-700 hover:underline">MA</Link>
-        </div>
+      {/* Filter Tabs */}
+      <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 bg-muted/50 rounded-2xl border border-border max-w-2xl mx-auto">
+        <Button
+          variant={selectedFilter === "semua" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedFilter("semua")}
+          className="rounded-full text-xs font-medium"
+        >
+          Semua Foto ({initialGaleriList.length})
+        </Button>
+        <Button
+          variant={selectedFilter === "yayasan" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedFilter("yayasan")}
+          className="rounded-full text-xs font-medium"
+        >
+          Yayasan
+        </Button>
+        <Button
+          variant={selectedFilter === "tkit" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedFilter("tkit")}
+          className="rounded-full text-xs font-medium"
+        >
+          TKIT
+        </Button>
+        <Button
+          variant={selectedFilter === "sdit" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedFilter("sdit")}
+          className="rounded-full text-xs font-medium"
+        >
+          SDIT
+        </Button>
+        <Button
+          variant={selectedFilter === "mts" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedFilter("mts")}
+          className="rounded-full text-xs font-medium"
+        >
+          MTs
+        </Button>
+        <Button
+          variant={selectedFilter === "ma" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setSelectedFilter("ma")}
+          className="rounded-full text-xs font-medium"
+        >
+          MA
+        </Button>
       </div>
 
       {/* Grid Display */}
@@ -110,40 +85,28 @@ export function GaleriClientContainer({ initialGaleriList }: GaleriClientContain
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {filteredList.map((item) => {
-            const imgUrl = formatImageUrl(item.imageUrl);
-            return (
-              <div
-                key={item.id}
-                className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden bg-emerald-950/20 border border-border shadow-xs hover:shadow-xl transition-all duration-300"
-              >
-                {imgUrl ? (
-                  <img
-                    src={imgUrl}
-                    alt={item.judul}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-emerald-950/40 text-gold-400">
-                    <ImageIcon className="w-8 h-8 opacity-40" />
-                  </div>
-                )}
+          {filteredList.map((item) => (
+            <div
+              key={item.id}
+              className="group relative h-52 sm:h-64 rounded-2xl overflow-hidden bg-emerald-950/20 border border-border shadow-xs hover:shadow-xl transition-all duration-300"
+            >
+              <SafeImage
+                src={item.imageUrl}
+                alt={item.judul}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/20 to-transparent opacity-85 group-hover:opacity-95 transition-opacity" />
 
-                <div className="absolute bottom-0 inset-x-0 p-4 text-white flex flex-col justify-end">
-                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gold-500 text-emerald-950 w-fit mb-1">
-                    {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
-                  </span>
-                  <h3 className="font-heading font-semibold text-sm line-clamp-2 group-hover:text-gold-300 transition-colors">
-                    {item.judul}
-                  </h3>
-                </div>
+              <div className="absolute bottom-0 inset-x-0 p-4 text-white flex flex-col justify-end z-10">
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gold-500 text-emerald-950 w-fit mb-1">
+                  {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
+                </span>
+                <h3 className="font-heading font-semibold text-sm line-clamp-2 group-hover:text-gold-300 transition-colors">
+                  {item.judul}
+                </h3>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
     </div>

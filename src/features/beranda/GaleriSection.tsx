@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { Image as ImageIcon, ArrowRight } from "lucide-react";
-import { formatImageUrl } from "@/lib/utils/image";
+import { Image as ImageIcon } from "lucide-react";
+import { SafeImage } from "@/components/ui/SafeImage";
 import type { Galeri } from "@/types";
 
 interface GaleriSectionProps {
@@ -32,42 +34,30 @@ export function GaleriSection({ galeriList }: GaleriSectionProps) {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {galeriList.slice(0, 8).map((item, index) => {
-              const imgUrl = formatImageUrl(item.imageUrl);
-              return (
-                <div
-                  key={item.id || index}
-                  className="group relative h-48 sm:h-60 rounded-2xl overflow-hidden bg-emerald-950/20 border border-border shadow-xs hover:shadow-xl transition-all duration-300"
-                >
-                  {imgUrl ? (
-                    <img
-                      src={imgUrl}
-                      alt={item.judul}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-emerald-950/40 text-gold-400">
-                      <ImageIcon className="w-8 h-8 opacity-40" />
-                    </div>
-                  )}
+            {galeriList.slice(0, 8).map((item, index) => (
+              <div
+                key={item.id || index}
+                className="group relative h-48 sm:h-60 rounded-2xl overflow-hidden bg-emerald-950/20 border border-border shadow-xs hover:shadow-xl transition-all duration-300"
+              >
+                <SafeImage
+                  src={item.imageUrl}
+                  alt={item.judul}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity" />
 
                 {/* Content Overlay */}
-                  <div className="absolute bottom-0 inset-x-0 p-4 text-white flex flex-col justify-end">
-                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gold-500 text-emerald-950 w-fit mb-1">
-                      {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
-                    </span>
-                    <h3 className="font-heading font-semibold text-sm line-clamp-1 group-hover:text-gold-300 transition-colors">
-                      {item.judul}
-                    </h3>
-                  </div>
+                <div className="absolute bottom-0 inset-x-0 p-4 text-white flex flex-col justify-end z-10">
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-gold-500 text-emerald-950 w-fit mb-1">
+                    {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
+                  </span>
+                  <h3 className="font-heading font-semibold text-sm line-clamp-1 group-hover:text-gold-300 transition-colors">
+                    {item.judul}
+                  </h3>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
 

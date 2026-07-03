@@ -1,8 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import Image from "next/image";
-import { Calendar, Newspaper, ArrowRight, FileText } from "lucide-react";
+import { Calendar, ArrowRight, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatImageUrl } from "@/lib/utils/image";
+import { SafeImage } from "@/components/ui/SafeImage";
 import type { Berita } from "@/types";
 
 interface BeritaSectionProps {
@@ -44,40 +45,23 @@ export function BeritaSection({ beritaList }: BeritaSectionProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {beritaList.slice(0, 3).map((item) => {
-              const formattedImg = formatImageUrl(item.gambarUtamaUrl);
-              return (
-                <Card key={item.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all flex flex-col justify-between bg-card group">
-                  <div>
-                    {/* Thumbnail */}
-                    <div className="relative w-full h-48 bg-emerald-900/10 overflow-hidden">
-                      {formattedImg ? (
-                        <img
-                          src={formattedImg}
-                          alt={item.judul}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onError={(e) => {
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) {
-                              e.currentTarget.style.display = "none";
-                              const fallback = document.createElement("div");
-                              fallback.className = "w-full h-full flex items-center justify-center text-emerald-800/40 font-heading font-bold text-2xl bg-emerald-100/40";
-                              fallback.innerText = "Al-Hikmah";
-                              parent.appendChild(fallback);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-emerald-800/40 font-heading font-bold text-2xl bg-emerald-100/40">
-                          Al-Hikmah
-                        </div>
-                      )}
-                      <div className="absolute top-3 left-3">
-                        <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-md bg-emerald-950/80 text-gold-400 backdrop-blur-xs border border-gold-500/30">
-                          {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
-                        </span>
-                      </div>
+            {beritaList.slice(0, 3).map((item) => (
+              <Card key={item.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all flex flex-col justify-between bg-card group">
+                <div>
+                  {/* Thumbnail */}
+                  <div className="relative w-full h-48 bg-emerald-900/10 overflow-hidden">
+                    <SafeImage
+                      src={item.gambarUtamaUrl}
+                      alt={item.judul}
+                      fallbackText="Al-Hikmah"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-3 left-3 z-10">
+                      <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-md bg-emerald-950/80 text-gold-400 backdrop-blur-xs border border-gold-500/30">
+                        {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
+                      </span>
                     </div>
+                  </div>
 
                   <CardHeader className="p-5 pb-2">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
@@ -112,9 +96,8 @@ export function BeritaSection({ beritaList }: BeritaSectionProps) {
                   </Link>
                 </div>
               </Card>
-            );
-          })}
-        </div>
+            ))}
+          </div>
         )}
       </div>
     </section>
