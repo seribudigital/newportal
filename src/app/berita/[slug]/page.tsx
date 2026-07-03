@@ -107,12 +107,16 @@ export default async function BeritaDetailPage({ params }: BeritaDetailPageProps
         </div>
 
         {/* Main Banner Image */}
-        {berita.gambarUtamaUrl && (
+        {berita.gambarUtamaUrl && !berita.gambarUtamaUrl.startsWith("blob:") && (
           <div className="w-full h-[300px] sm:h-[420px] rounded-2xl overflow-hidden bg-emerald-900/10 border border-border">
             <img
               src={berita.gambarUtamaUrl}
               alt={berita.judul}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const parent = e.currentTarget.parentElement;
+                if (parent) parent.style.display = "none";
+              }}
             />
           </div>
         )}

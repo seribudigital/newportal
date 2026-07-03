@@ -19,6 +19,16 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
   const [errorMsg, setErrorMsg] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [manualUrl, setManualUrl] = useState("");
+  const [imgError, setImgError] = useState(false);
+
+  const convertFileToDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,15 +46,20 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
 
     setLoading(true);
     setErrorMsg("");
+    setImgError(false);
 
     try {
       const result = await uploadMediaFile(file, jenjangId, (p) => setProgress(p));
       onChange(result.url);
     } catch (err) {
-      console.error("Upload error:", err);
-      // Fallback preview for offline / demo environment
-      const mockUrl = URL.createObjectURL(file);
-      onChange(mockUrl);
+      console.warn("Server upload fallback: converting file to persistent Data URL", err);
+      try {
+        const persistentUrl = await convertFileToDataUrl(file);
+        onChange(persistentUrl);
+      } catch (readErr) {
+        console.error("FileReader error:", readErr);
+        setErrorMsg("Gagal membaca berkas gambar dari perangkat.");
+      }
     } finally {
       setLoading(false);
     }
@@ -53,10 +68,13 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
   const handleManualUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (manualUrl.trim()) {
+      setImgError(false);
       onChange(manualUrl.trim());
       setShowUrlInput(false);
     }
   };
+
+  const isBlobUrl = value?.startsWith("blob:");
 
   return (
     <div className="space-y-2">
@@ -74,9 +92,14 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
         )}
       </div>
 
-      {value ? (
+      {value && !imgError && !isBlobUrl ? (
         <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-border bg-emerald-950/10 group">
-          <img src={value} alt="Preview Upload" className="w-full h-full object-cover" />
+          <img
+            src={value}
+            alt="Preview Upload"
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <Button
               type="button"
@@ -85,12 +108,32 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
               onClick={() => {
                 onChange("");
                 setManualUrl("");
+                setImgError(false);
               }}
               className="rounded-xl text-xs font-semibold px-3 py-1.5"
             >
               <X className="w-3.5 h-3.5 mr-1" /> Hapus / Ganti Gambar
             </Button>
           </div>
+        </div>
+      ) : value && (imgError || isBlobUrl) ? (
+        <div className="w-full p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-center space-y-2">
+          <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+            Gambar sebelumnya menggunakan session sementara yang sudah tidak berlaku/kadaluarsa.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="xs"
+            onClick={() => {
+              onChange("");
+              setManualUrl("");
+              setImgError(false);
+            }}
+            className="rounded-xl text-xs font-semibold px-3 py-1 border-amber-500/50 text-amber-800 dark:text-amber-200"
+          >
+            Unggah Ulang Gambar
+          </Button>
         </div>
       ) : showUrlInput ? (
         <form onSubmit={handleManualUrlSubmit} className="flex gap-2">

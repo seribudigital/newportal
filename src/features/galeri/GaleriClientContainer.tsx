@@ -118,6 +118,9 @@ export function GaleriClientContainer({ initialGaleriList }: GaleriClientContain
                 src={item.imageUrl}
                 alt={item.judul}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/20 to-transparent opacity-85 group-hover:opacity-95 transition-opacity" />
 

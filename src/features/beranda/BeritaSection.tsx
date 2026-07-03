@@ -48,11 +48,22 @@ export function BeritaSection({ beritaList }: BeritaSectionProps) {
                 <div>
                   {/* Thumbnail */}
                   <div className="relative w-full h-48 bg-emerald-900/10 overflow-hidden">
-                    {item.gambarUtamaUrl ? (
+                    {item.gambarUtamaUrl && !item.gambarUtamaUrl.startsWith("blob:") ? (
                       <img
                         src={item.gambarUtamaUrl}
                         alt={item.judul}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          // Fallback to text logo if image fails to load
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            e.currentTarget.style.display = "none";
+                            const fallback = document.createElement("div");
+                            fallback.className = "w-full h-full flex items-center justify-center text-emerald-800/40 font-heading font-bold text-2xl bg-emerald-100/40";
+                            fallback.innerText = "Al-Hikmah";
+                            parent.appendChild(fallback);
+                          }
+                        }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-emerald-800/40 font-heading font-bold text-2xl bg-emerald-100/40">
