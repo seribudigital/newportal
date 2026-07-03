@@ -6,6 +6,7 @@ import { Calendar, FileText, ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { useSettings } from "@/lib/settingsContext";
 import type { Berita, JenjangId } from "@/types";
 
 interface BeritaClientContainerProps {
@@ -15,6 +16,7 @@ interface BeritaClientContainerProps {
 type FilterOption = "semua" | "yayasan" | JenjangId;
 
 export function BeritaClientContainer({ initialBeritaList }: BeritaClientContainerProps) {
+  const { settings } = useSettings();
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>("semua");
   const [visibleCount, setVisibleCount] = useState<number>(6);
 
@@ -101,7 +103,7 @@ export function BeritaClientContainer({ initialBeritaList }: BeritaClientContain
                   <SafeImage
                     src={item.gambarUtamaUrl}
                     alt={item.judul}
-                    fallbackText="Al-Hikmah"
+                    fallbackText={item.jenjangId ? `${item.jenjangId.toUpperCase()} ${settings?.singkatanYayasan || ''}`.trim() : (settings?.singkatanYayasan || settings?.namaYayasan || "")}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3 z-10">

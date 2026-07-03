@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Calendar, ArrowRight, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { useSettings } from "@/lib/settingsContext";
 import type { Berita } from "@/types";
 
 interface BeritaSectionProps {
@@ -11,6 +12,7 @@ interface BeritaSectionProps {
 }
 
 export function BeritaSection({ beritaList }: BeritaSectionProps) {
+  const { settings } = useSettings();
   return (
     <section className="py-16 md:py-24 bg-emerald-950/5 relative border-y border-emerald-900/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,7 +55,7 @@ export function BeritaSection({ beritaList }: BeritaSectionProps) {
                     <SafeImage
                       src={item.gambarUtamaUrl}
                       alt={item.judul}
-                      fallbackText="Al-Hikmah"
+                      fallbackText={item.jenjangId ? `${item.jenjangId.toUpperCase()} ${settings?.singkatanYayasan || ''}`.trim() : (settings?.singkatanYayasan || settings?.namaYayasan || "")}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute top-3 left-3 z-10">
