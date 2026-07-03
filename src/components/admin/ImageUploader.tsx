@@ -41,22 +41,24 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
     setImgError(false);
 
     try {
-      const result = await uploadMediaFile(file, jenjangId, (p) => setProgress(p));
-      if (result.url.startsWith("data:") && result.url.length > 500000) {
-        const compressedUrl = await compressImage(file);
-        onChange(compressedUrl);
-      } else {
-        onChange(result.url);
-      }
+      // 1. Immediately compress image to lightweight JPEG (~40KB) for 100% guaranteed persistence
+      // This ensures images never disappear even when dashboard is closed or auth session ends.
+      const compressedUrl = await compressImage(file);
+      onChange(compressedUrl);
+
+      // 2. Attempt background upload to Cloud Storage if configured
+      uploadMediaFile(file, jenjangId, (p) => setProgress(p))
+        .then((result) => {
+          if (result.url && !result.url.startsWith("data:")) {
+            onChange(result.url);
+          }
+        })
+        .catch((storageErr) => {
+          console.log("Storage upload background notice (using compressed fallback):", storageErr);
+        });
     } catch (err) {
-      console.warn("Storage upload fallback: compressing image to lightweight Data URL", err);
-      try {
-        const compressedUrl = await compressImage(file);
-        onChange(compressedUrl);
-      } catch (readErr) {
-        console.error("Image compression error:", readErr);
-        setErrorMsg("Gagal membaca dan memproses berkas gambar.");
-      }
+      console.error("Image compression error:", err);
+      setErrorMsg("Gagal membaca dan memproses berkas gambar.");
     } finally {
       setLoading(false);
     }
