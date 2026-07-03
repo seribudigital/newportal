@@ -64,7 +64,7 @@ export function GaleriLightboxModal({ item, onClose }: GaleriLightboxModalProps)
       <div className="relative w-full max-w-5xl h-[92vh] flex flex-col justify-between bg-emerald-950/80 border border-emerald-800/40 rounded-3xl overflow-hidden shadow-2xl text-white">
         
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/10 bg-emerald-950/90 z-20">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/10 bg-emerald-950/90 z-20 flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0 pr-4">
             <span className="text-[10px] sm:text-xs font-extrabold uppercase px-2.5 py-1 rounded bg-gold-500 text-emerald-950 flex-shrink-0">
               {item.jenjangId ? item.jenjangId.toUpperCase() : "YAYASAN"}
@@ -90,7 +90,7 @@ export function GaleriLightboxModal({ item, onClose }: GaleriLightboxModalProps)
         </div>
 
         {/* Main Display Stage */}
-        <div className="relative flex-1 flex items-center justify-center p-2 sm:p-4 overflow-hidden bg-black/60">
+        <div className="relative flex-1 min-h-0 w-full flex items-center justify-center p-2 sm:p-4 overflow-hidden bg-black/60">
           {/* Previous Button */}
           {photos.length > 1 && (
             <button
@@ -103,14 +103,14 @@ export function GaleriLightboxModal({ item, onClose }: GaleriLightboxModalProps)
             </button>
           )}
 
-          {/* Main Photo (Fully intact, scaled to fit screen without cropping) */}
-          <div className="relative w-full h-full flex items-center justify-center p-1 sm:p-2">
+          {/* Main Photo (Guaranteed 100% full intact display, constrained strictly to available space) */}
+          <div className="relative w-full h-full min-h-0 flex items-center justify-center p-1 sm:p-2">
             <img
               key={currentPhotoUrl}
               src={currentPhotoUrl}
               alt={`${item.judul} - ${currentIndex + 1}`}
-              className="max-w-full max-h-[72vh] sm:max-h-[78vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition-all duration-300 animate-in fade-in-50 zoom-in-95"
-              style={{ objectFit: "contain" }}
+              className="max-w-full max-h-full w-auto h-auto object-contain rounded-xl shadow-2xl transition-all duration-300 animate-in fade-in-50 zoom-in-95"
+              style={{ objectFit: "contain", maxHeight: "100%", maxWidth: "100%" }}
             />
           </div>
 
@@ -128,7 +128,7 @@ export function GaleriLightboxModal({ item, onClose }: GaleriLightboxModalProps)
         </div>
 
         {/* Bottom Panel (Description & Thumbnail Selector) */}
-        <div className="p-4 sm:p-5 bg-emerald-950/95 border-t border-white/10 space-y-3 z-20">
+        <div className="p-4 sm:p-5 bg-emerald-950/95 border-t border-white/10 space-y-3 z-20 flex-shrink-0">
           {item.keterangan && (
             <p className="text-xs sm:text-sm text-emerald-100/90 line-clamp-2 max-w-3xl">
               {item.keterangan}
