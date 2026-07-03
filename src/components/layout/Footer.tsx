@@ -64,25 +64,37 @@ export function Footer() {
               <li>
                 <Link href="/tentang" className="hover:text-gold-400 transition-colors flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gold-500/60" />
-                  Visi & Misi Yayasan
+                  Profil & Pengurus
+                </Link>
+              </li>
+              <li>
+                <Link href="/agenda" className="hover:text-gold-400 transition-colors flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold-500/60" />
+                  Agenda & Kegiatan
+                </Link>
+              </li>
+              <li>
+                <Link href="/prestasi" className="hover:text-gold-400 transition-colors flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold-500/60" />
+                  Prestasi Santri
                 </Link>
               </li>
               <li>
                 <Link href="/berita" className="hover:text-gold-400 transition-colors flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gold-500/60" />
-                  Berita & Kegiatan
-                </Link>
-              </li>
-              <li>
-                <Link href="/ppdb" className="hover:text-gold-400 transition-colors flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gold-500/60" />
-                  Informasi PPDB Online
+                  Berita Sekolah
                 </Link>
               </li>
               <li>
                 <Link href="/galeri" className="hover:text-gold-400 transition-colors flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gold-500/60" />
                   Galeri Foto & Video
+                </Link>
+              </li>
+              <li>
+                <Link href="/ppdb" className="hover:text-gold-400 transition-colors flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold-500/60" />
+                  Informasi PPDB Online
                 </Link>
               </li>
             </ul>

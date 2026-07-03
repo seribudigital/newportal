@@ -20,11 +20,11 @@ export function NavLinks({ onLinkClick, className = "" }: NavLinksProps) {
   const [openDropdown, setOpenDropdown] = useState(false);
 
   return (
-    <nav className={`flex items-center gap-1 md:gap-6 ${className}`} aria-label="Navigasi Utama">
+    <nav className="flex items-center gap-1 md:gap-2 lg:gap-5" aria-label="Navigasi Utama">
       <Link
         href="/"
         onClick={onLinkClick}
-        className="px-3 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
+        className="px-2.5 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
       >
         Beranda
       </Link>
@@ -32,7 +32,7 @@ export function NavLinks({ onLinkClick, className = "" }: NavLinksProps) {
       <Link
         href="/tentang"
         onClick={onLinkClick}
-        className="px-3 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
+        className="px-2.5 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
       >
         Tentang
       </Link>
@@ -40,7 +40,7 @@ export function NavLinks({ onLinkClick, className = "" }: NavLinksProps) {
       {/* Dropdown Jenjang Desktop */}
       <div className="relative hidden md:block">
         <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
-          <DropdownMenuTrigger className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer">
+          <DropdownMenuTrigger className="flex items-center gap-1 px-2.5 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer">
             <span>Jenjang</span>
             <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openDropdown ? "rotate-180" : ""}`} />
           </DropdownMenuTrigger>
@@ -64,9 +64,25 @@ export function NavLinks({ onLinkClick, className = "" }: NavLinksProps) {
       </div>
 
       <Link
+        href="/agenda"
+        onClick={onLinkClick}
+        className="px-2.5 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
+      >
+        Agenda
+      </Link>
+
+      <Link
+        href="/prestasi"
+        onClick={onLinkClick}
+        className="px-2.5 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
+      >
+        Prestasi
+      </Link>
+
+      <Link
         href="/berita"
         onClick={onLinkClick}
-        className="px-3 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
+        className="px-2.5 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
       >
         Berita
       </Link>
@@ -74,7 +90,7 @@ export function NavLinks({ onLinkClick, className = "" }: NavLinksProps) {
       <Link
         href="/galeri"
         onClick={onLinkClick}
-        className="px-3 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
+        className="px-2.5 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
       >
         Galeri
       </Link>
@@ -82,7 +98,7 @@ export function NavLinks({ onLinkClick, className = "" }: NavLinksProps) {
       <Link
         href="/kontak"
         onClick={onLinkClick}
-        className="px-3 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
+        className="px-2.5 py-2 text-sm font-medium text-foreground hover:text-emerald-700 transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600"
       >
         Kontak
       </Link>

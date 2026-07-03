@@ -74,11 +74,27 @@ export function MobileNav() {
             </div>
 
             <Link
+              href="/agenda"
+              onClick={() => setIsOpen(false)}
+              className="px-4 py-2.5 text-base font-medium rounded-lg hover:bg-emerald-50 text-foreground"
+            >
+              Agenda Kegiatan
+            </Link>
+
+            <Link
+              href="/prestasi"
+              onClick={() => setIsOpen(false)}
+              className="px-4 py-2.5 text-base font-medium rounded-lg hover:bg-emerald-50 text-foreground"
+            >
+              Prestasi Santri
+            </Link>
+
+            <Link
               href="/berita"
               onClick={() => setIsOpen(false)}
               className="px-4 py-2.5 text-base font-medium rounded-lg hover:bg-emerald-50 text-foreground"
             >
-              Berita & Agenda
+              Berita Sekolah
             </Link>
 
             <Link
@@ -86,7 +102,7 @@ export function MobileNav() {
               onClick={() => setIsOpen(false)}
               className="px-4 py-2.5 text-base font-medium rounded-lg hover:bg-emerald-50 text-foreground"
             >
-              Galeri Kegiatan
+              Galeri Foto
             </Link>
 
             <Link
