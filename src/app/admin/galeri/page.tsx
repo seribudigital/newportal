@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getGaleriList } from "@/lib/services/galeri";
 import { createDocument, deleteDocument } from "@/lib/services/konten";
-import { ImageUploader } from "@/components/admin/ImageUploader";
+import { MultiImageUploader } from "@/components/admin/MultiImageUploader";
 import { Timestamp } from "firebase/firestore";
 import type { Galeri, JenjangId } from "@/types";
 
@@ -18,7 +18,7 @@ export default function AdminGaleriPage() {
   const [showForm, setShowForm] = useState(false);
 
   const [judul, setJudul] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imagesUrl, setImagesUrl] = useState<string[]>([]);
   const [keterangan, setKeterangan] = useState("");
   const [selectedJenjang, setSelectedJenjang] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
@@ -42,17 +42,23 @@ export default function AdminGaleriPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (imagesUrl.length === 0) {
+      alert("Harap unggah minimal 1 foto kegiatan.");
+      return;
+    }
     setSubmitting(true);
     try {
+      const mainCoverUrl = imagesUrl[0];
       await createDocument<Galeri>("galeri", {
         judul,
-        imageUrl,
+        imageUrl: mainCoverUrl,
+        imagesUrl: imagesUrl,
         keterangan,
         tanggal: Timestamp.now(),
         jenjangId: selectedJenjang ? (selectedJenjang as JenjangId) : (isYayasanAdmin ? undefined : profile!.jenjangId),
       });
       setShowForm(false);
-      setJudul(""); setImageUrl(""); setKeterangan("");
+      setJudul(""); setImagesUrl([]); setKeterangan("");
       await loadData();
     } catch (err) {
       alert("Gagal menambahkan galeri: " + (err as Error).message);
@@ -62,7 +68,7 @@ export default function AdminGaleriPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Hapus foto galeri ini?")) return;
+    if (!confirm("Hapus album foto galeri ini?")) return;
     try {
       await deleteDocument("galeri", id);
       await loadData();
@@ -79,7 +85,7 @@ export default function AdminGaleriPage() {
             Kelola Galeri Dokumentasi
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Foto kegiatan yayasan & sekolah
+            Foto & album kegiatan yayasan & sekolah
           </p>
         </div>
 
@@ -88,22 +94,22 @@ export default function AdminGaleriPage() {
           className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto"
         >
           <PlusCircle className="w-4 h-4 mr-1.5" />
-          <span>{showForm ? "Tutup Form" : "Tambah Foto Galeri"}</span>
+          <span>{showForm ? "Tutup Form" : "Tambah Album Galeri"}</span>
         </Button>
       </div>
 
       {showForm && (
         <Card className="p-6 border border-border bg-card shadow-md space-y-4">
-          <h2 className="font-heading font-bold text-lg text-foreground">Form Tambah Foto Galeri</h2>
+          <h2 className="font-heading font-bold text-lg text-foreground">Form Tambah Album Galeri</h2>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs font-semibold">Judul Foto / Dokumentasi</label>
+              <label className="text-xs font-semibold">Judul Kegiatan / Album Dokumentasi</label>
               <input
                 type="text"
                 required
                 value={judul}
                 onChange={(e) => setJudul(e.target.value)}
-                placeholder="Kegiatan Manasik Haji Cilik"
+                placeholder="Kegiatan Manasik Haji Cilik Santri"
                 className="w-full px-3 py-2 text-xs rounded-xl border border-input bg-background"
               />
             </div>
@@ -132,26 +138,27 @@ export default function AdminGaleriPage() {
               )}
             </div>
 
-            <ImageUploader
-              value={imageUrl}
-              onChange={(url) => setImageUrl(url)}
+            <MultiImageUploader
+              values={imagesUrl}
+              onChange={setImagesUrl}
               jenjangId={selectedJenjang ? (selectedJenjang as JenjangId) : profile?.jenjangId}
-              label="Unggah Berkas Foto"
+              label="Unggah Berkas Foto Album"
             />
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold">Keterangan Tambahan</label>
+              <label className="text-xs font-semibold">Keterangan / Deskripsi Kegiatan</label>
               <textarea
-                rows={2}
+                rows={3}
                 value={keterangan}
                 onChange={(e) => setKeterangan(e.target.value)}
+                placeholder="Dokumentasi suasana kegiatan pembelajaran & praktik di..."
                 className="w-full px-3 py-2 text-xs rounded-xl border border-input bg-background"
               />
             </div>
 
             <div className="flex justify-end pt-2">
               <Button type="submit" disabled={submitting} className="bg-primary text-white text-xs px-6 py-2 rounded-xl">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : "Simpan Foto Galeri"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : "Simpan Album Galeri"}
               </Button>
             </div>
           </form>
@@ -170,21 +177,28 @@ export default function AdminGaleriPage() {
               <tr>
                 <th className="p-3">Judul Dokumentasi</th>
                 <th className="p-3">Jenjang</th>
+                <th className="p-3">Jumlah Foto</th>
                 <th className="p-3 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {galeriList.map((item) => (
-                <tr key={item.id}>
-                  <td className="p-3 font-semibold">{item.judul}</td>
-                  <td className="p-3 font-bold uppercase">{item.jenjangId || "YAYASAN"}</td>
-                  <td className="p-3 text-right">
-                    <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive">
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {galeriList.map((item) => {
+                const totalPhotos = item.imagesUrl && item.imagesUrl.length > 0 ? item.imagesUrl.length : 1;
+                return (
+                  <tr key={item.id}>
+                    <td className="p-3 font-semibold">{item.judul}</td>
+                    <td className="p-3 font-bold uppercase">{item.jenjangId || "YAYASAN"}</td>
+                    <td className="p-3 font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                      📷 {totalPhotos} Foto
+                    </td>
+                    <td className="p-3 text-right">
+                      <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive">
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -101,6 +101,7 @@ export interface Galeri {
   id: string;
   judul: string;
   imageUrl: string;
+  imagesUrl?: string[]; // array foto dalam album (multi-photo)
   jenjangId?: JenjangId; // kosong = galeri yayasan
   tanggal: Timestamp;
   keterangan?: string;

@@ -82,13 +82,17 @@ async function seed() {
         id: 'galeri-yayasan-1',
         judul: 'Upacara Peringatan Hari Pendidikan Islam',
         imageUrl: '/images/galeri-1.jpg',
+        imagesUrl: ['/images/galeri-1.jpg', '/images/hero-1.jpg', '/images/berita-1.jpg'],
+        keterangan: 'Dokumentasi upacara gabungan santri & pengurus yayasan memperingati Hari Pendidikan Islam.',
         tanggal: Timestamp.now(),
       },
       {
         id: 'galeri-tkit-1',
         judul: 'Manasik Haji Cilik Santri TKIT',
         imageUrl: '/images/galeri-tkit.jpg',
+        imagesUrl: ['/images/galeri-tkit.jpg', '/images/galeri-1.jpg'],
         jenjangId: 'tkit',
+        keterangan: 'Praktik manasik haji cilik santri TKIT mengenakan pakaian ihram.',
         tanggal: Timestamp.now(),
       }
     ];
