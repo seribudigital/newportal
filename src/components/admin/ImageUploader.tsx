@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Upload, X, Loader2, Image as ImageIcon, Link2 } from "lucide-react";
 import { uploadMediaFile } from "@/lib/services/storage";
 import { Button } from "@/components/ui/button";
-import { formatImageUrl } from "@/lib/utils/image";
+import { formatImageUrl, compressImage } from "@/lib/utils/image";
 import type { JenjangId } from "@/types";
 
 interface ImageUploaderProps {
@@ -21,15 +21,6 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [manualUrl, setManualUrl] = useState("");
   const [imgError, setImgError] = useState(false);
-
-  const convertFileToDataUrl = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (err) => reject(err);
-      reader.readAsDataURL(file);
-    });
-  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,15 +42,20 @@ export function ImageUploader({ value, onChange, jenjangId, label = "Gambar Utam
 
     try {
       const result = await uploadMediaFile(file, jenjangId, (p) => setProgress(p));
-      onChange(result.url);
+      if (result.url.startsWith("data:") && result.url.length > 500000) {
+        const compressedUrl = await compressImage(file);
+        onChange(compressedUrl);
+      } else {
+        onChange(result.url);
+      }
     } catch (err) {
-      console.warn("Server upload fallback: converting file to persistent Data URL", err);
+      console.warn("Storage upload fallback: compressing image to lightweight Data URL", err);
       try {
-        const persistentUrl = await convertFileToDataUrl(file);
-        onChange(persistentUrl);
+        const compressedUrl = await compressImage(file);
+        onChange(compressedUrl);
       } catch (readErr) {
-        console.error("FileReader error:", readErr);
-        setErrorMsg("Gagal membaca berkas gambar dari perangkat.");
+        console.error("Image compression error:", readErr);
+        setErrorMsg("Gagal membaca dan memproses berkas gambar.");
       }
     } finally {
       setLoading(false);
