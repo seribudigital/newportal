@@ -90,26 +90,27 @@ export function GaleriLightboxModal({ item, onClose }: GaleriLightboxModalProps)
         </div>
 
         {/* Main Display Stage */}
-        <div className="relative flex-1 flex items-center justify-center p-2 sm:p-6 overflow-hidden bg-black/40">
+        <div className="relative flex-1 flex items-center justify-center p-2 sm:p-4 overflow-hidden bg-black/60">
           {/* Previous Button */}
           {photos.length > 1 && (
             <button
               type="button"
               onClick={handlePrev}
               aria-label="Foto Sebelumnya"
-              className="absolute left-3 sm:left-6 z-20 p-3 rounded-full bg-black/60 hover:bg-gold-500 hover:text-emerald-950 text-white backdrop-blur-md transition-all shadow-lg hover:scale-110"
+              className="absolute left-2 sm:left-4 z-20 p-2.5 sm:p-3 rounded-full bg-black/60 hover:bg-gold-500 hover:text-emerald-950 text-white backdrop-blur-md transition-all shadow-lg hover:scale-110"
             >
-              <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+              <ChevronLeft className="w-5 h-5 sm:w-8 sm:h-8" />
             </button>
           )}
 
-          {/* Main Photo */}
-          <div className="relative max-w-full max-h-full flex items-center justify-center">
+          {/* Main Photo (Fully intact, scaled to fit screen without cropping) */}
+          <div className="relative w-full h-full flex items-center justify-center p-1 sm:p-2">
             <img
               key={currentPhotoUrl}
               src={currentPhotoUrl}
               alt={`${item.judul} - ${currentIndex + 1}`}
-              className="max-w-full max-h-[62vh] sm:max-h-[68vh] object-contain rounded-2xl shadow-2xl transition-all duration-300 animate-in fade-in-50 zoom-in-95"
+              className="max-w-full max-h-[72vh] sm:max-h-[78vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition-all duration-300 animate-in fade-in-50 zoom-in-95"
+              style={{ objectFit: "contain" }}
             />
           </div>
 
@@ -119,9 +120,9 @@ export function GaleriLightboxModal({ item, onClose }: GaleriLightboxModalProps)
               type="button"
               onClick={handleNext}
               aria-label="Foto Selanjutnya"
-              className="absolute right-3 sm:right-6 z-20 p-3 rounded-full bg-black/60 hover:bg-gold-500 hover:text-emerald-950 text-white backdrop-blur-md transition-all shadow-lg hover:scale-110"
+              className="absolute right-2 sm:right-4 z-20 p-2.5 sm:p-3 rounded-full bg-black/60 hover:bg-gold-500 hover:text-emerald-950 text-white backdrop-blur-md transition-all shadow-lg hover:scale-110"
             >
-              <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+              <ChevronRight className="w-5 h-5 sm:w-8 sm:h-8" />
             </button>
           )}
         </div>
