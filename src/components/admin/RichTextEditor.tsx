@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { 
   Bold, 
   Italic, 
   Underline, 
   List, 
   ListOrdered, 
-  Heading2, 
-  Heading3, 
   AlignLeft, 
   AlignCenter, 
   AlignRight, 
@@ -32,7 +30,7 @@ interface RichTextEditorProps {
 export function parseAndEnsureParagraphs(content: string): string {
   if (!content) return "";
   
-  // Check if string contains HTML tags like <p>, <div>, <h2>, <h3>, <br>, <ul>, <ol>, <li>, <b>, <i>, <u>, etc.
+  // Check if string contains HTML tags
   const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
   
   if (hasHtmlTags) {
@@ -63,6 +61,83 @@ export function RichTextEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
 
+  // Active state for toolbar buttons
+  const [activeStates, setActiveStates] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+    h2: false,
+    h3: false,
+    ul: false,
+    ol: false,
+    alignLeft: false,
+    alignCenter: false,
+    alignRight: false,
+    justify: false,
+  });
+
+  // Track cursor selection to highlight active toolbar buttons
+  const updateActiveStates = useCallback(() => {
+    if (!editorRef.current) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    if (!editorRef.current.contains(sel.anchorNode)) return;
+
+    try {
+      const bold = document.queryCommandState("bold");
+      const italic = document.queryCommandState("italic");
+      const underline = document.queryCommandState("underline");
+      const ul = document.queryCommandState("insertUnorderedList");
+      const ol = document.queryCommandState("insertOrderedList");
+
+      let node: Node | null = sel.getRangeAt(0).commonAncestorContainer;
+      if (node.nodeType === 3) node = node.parentElement;
+
+      let isH2 = false;
+      let isH3 = false;
+      let isLeft = false;
+      let isCenter = false;
+      let isRight = false;
+      let isJustify = false;
+
+      let current = node as HTMLElement | null;
+      while (current && current !== editorRef.current) {
+        const tag = current.tagName?.toUpperCase();
+        if (tag === "H2") isH2 = true;
+        if (tag === "H3") isH3 = true;
+
+        const align = current.style?.textAlign || current.getAttribute("align") || "";
+        if (align === "center" || current.classList?.contains("text-center")) isCenter = true;
+        if (align === "right" || current.classList?.contains("text-right")) isRight = true;
+        if (align === "justify" || current.classList?.contains("text-justify")) isJustify = true;
+        if (align === "left" || current.classList?.contains("text-left")) isLeft = true;
+
+        current = current.parentElement;
+      }
+
+      setActiveStates({
+        bold,
+        italic,
+        underline,
+        h2: isH2,
+        h3: isH3,
+        ul,
+        ol,
+        alignLeft: isLeft,
+        alignCenter: isCenter,
+        alignRight: isRight,
+        justify: isJustify,
+      });
+    } catch {
+      // ignore queryCommandState errors
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("selectionchange", updateActiveStates);
+    return () => document.removeEventListener("selectionchange", updateActiveStates);
+  }, [updateActiveStates]);
+
   // Initialize and sync contenteditable div with value prop
   useEffect(() => {
     if (!editorRef.current) return;
@@ -79,6 +154,7 @@ export function RichTextEditor({
     isUpdatingRef.current = true;
     const html = editorRef.current.innerHTML;
     onChange(html);
+    updateActiveStates();
     setTimeout(() => {
       isUpdatingRef.current = false;
     }, 50);
@@ -92,38 +168,26 @@ export function RichTextEditor({
     handleInput();
   };
 
-  // Format Heading (H2 / H3) reliably across browsers
-  const formatHeading = (tag: "h2" | "h3") => {
+  // Toggle Heading (H2 / H3) or convert back to paragraph
+  const toggleHeading = (tag: "h2" | "h3") => {
     if (!editorRef.current) return;
     editorRef.current.focus();
 
-    try {
-      document.execCommand("formatBlock", false, `<${tag.toUpperCase()}>`);
-    } catch {
-      document.execCommand("formatBlock", false, tag);
-    }
+    const isCurrentActive = tag === "h2" ? activeStates.h2 : activeStates.h3;
 
-    // Fallback if node isn't converted
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      let node: Node | null = selection.getRangeAt(0).commonAncestorContainer;
-      if (node.nodeType === 3) node = node.parentElement;
-
-      if (node && node instanceof HTMLElement && editorRef.current.contains(node)) {
-        let block: HTMLElement = node;
-        while (
-          block.parentElement &&
-          block.parentElement !== editorRef.current &&
-          !["P", "DIV", "H1", "H2", "H3", "H4", "H5", "H6", "LI"].includes(block.tagName)
-        ) {
-          block = block.parentElement;
-        }
-
-        if (block && block !== editorRef.current && block.tagName !== tag.toUpperCase()) {
-          const newEl = document.createElement(tag);
-          newEl.innerHTML = block.innerHTML;
-          block.replaceWith(newEl);
-        }
+    if (isCurrentActive) {
+      // Toggle OFF back to normal paragraph
+      try {
+        document.execCommand("formatBlock", false, "<P>");
+      } catch {
+        document.execCommand("formatBlock", false, "p");
+      }
+    } else {
+      // Toggle ON
+      try {
+        document.execCommand("formatBlock", false, `<${tag.toUpperCase()}>`);
+      } catch {
+        document.execCommand("formatBlock", false, tag);
       }
     }
     handleInput();
@@ -136,7 +200,6 @@ export function RichTextEditor({
       if (e.shiftKey) {
         execCmd("outdent");
       } else {
-        // Insert 4 non-breaking spaces for tab indent at cursor position
         document.execCommand("insertHTML", false, "&nbsp;&nbsp;&nbsp;&nbsp;");
         handleInput();
       }
@@ -150,7 +213,16 @@ export function RichTextEditor({
     if (editorRef.current) {
       editorRef.current.innerHTML = formatted;
     }
+    updateActiveStates();
   };
+
+  // Active button helper class
+  const getBtnClass = (isActive: boolean) =>
+    `p-1.5 rounded-lg transition-all cursor-pointer ${
+      isActive
+        ? "bg-primary text-white shadow-xs font-bold ring-2 ring-primary/30"
+        : "hover:bg-background text-muted-foreground hover:text-foreground"
+    }`;
 
   return (
     <div className="space-y-2">
@@ -192,25 +264,31 @@ export function RichTextEditor({
 
           <div className="h-4 w-px bg-border mx-1" />
 
-          {/* Heading H2 & H3 */}
+          {/* Heading H2 & H3 Badges (Fixed Single Label) */}
           <button
             type="button"
-            onClick={() => formatHeading("h2")}
-            className="p-1.5 px-2 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1 font-bold text-xs"
-            title="Judul Utama (Heading 2)"
+            onClick={() => toggleHeading("h2")}
+            className={`px-2.5 py-1 rounded-lg font-heading font-extrabold text-xs transition-all cursor-pointer ${
+              activeStates.h2
+                ? "bg-primary text-white shadow-xs ring-2 ring-primary/30"
+                : "hover:bg-background text-emerald-800 dark:text-emerald-400"
+            }`}
+            title="Judul Utama (Heading 2) - Klik lagi untuk menonaktifkan"
           >
-            <Heading2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-            <span>H2</span>
+            H2
           </button>
 
           <button
             type="button"
-            onClick={() => formatHeading("h3")}
-            className="p-1.5 px-2 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1 font-bold text-xs"
-            title="Subjudul (Heading 3)"
+            onClick={() => toggleHeading("h3")}
+            className={`px-2.5 py-1 rounded-lg font-heading font-extrabold text-xs transition-all cursor-pointer ${
+              activeStates.h3
+                ? "bg-primary text-white shadow-xs ring-2 ring-primary/30"
+                : "hover:bg-background text-emerald-800 dark:text-emerald-400"
+            }`}
+            title="Subjudul (Heading 3) - Klik lagi untuk menonaktifkan"
           >
-            <Heading3 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-            <span>H3</span>
+            H3
           </button>
 
           <div className="h-4 w-px bg-border mx-1" />
@@ -219,7 +297,7 @@ export function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd("bold")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={getBtnClass(activeStates.bold)}
             title="Tebal (Bold)"
           >
             <Bold className="w-4 h-4" />
@@ -228,7 +306,7 @@ export function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd("italic")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={getBtnClass(activeStates.italic)}
             title="Cetak Miring (Italic)"
           >
             <Italic className="w-4 h-4" />
@@ -237,7 +315,7 @@ export function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd("underline")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={getBtnClass(activeStates.underline)}
             title="Garis Bawah (Underline)"
           >
             <Underline className="w-4 h-4" />
@@ -249,7 +327,7 @@ export function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd("insertUnorderedList")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={getBtnClass(activeStates.ul)}
             title="Daftar Poin (Bullet List)"
           >
             <List className="w-4 h-4" />
@@ -258,7 +336,7 @@ export function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd("insertOrderedList")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={getBtnClass(activeStates.ol)}
             title="Daftar Angka (Numbered List)"
           >
             <ListOrdered className="w-4 h-4" />
@@ -292,7 +370,7 @@ export function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd("justifyLeft")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={getBtnClass(activeStates.alignLeft)}
             title="Rata Kiri"
           >
             <AlignLeft className="w-4 h-4" />
@@ -301,7 +379,7 @@ export function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd("justifyCenter")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={getBtnClass(activeStates.alignCenter)}
             title="Rata Tengah"
           >
             <AlignCenter className="w-4 h-4" />
@@ -310,7 +388,7 @@ export function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd("justifyRight")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={getBtnClass(activeStates.alignRight)}
             title="Rata Kanan"
           >
             <AlignRight className="w-4 h-4" />
@@ -319,7 +397,7 @@ export function RichTextEditor({
           <button
             type="button"
             onClick={() => execCmd("justifyFull")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={getBtnClass(activeStates.justify)}
             title="Rata Kiri Kanan (Justify)"
           >
             <AlignJustify className="w-4 h-4" />
@@ -352,6 +430,9 @@ export function RichTextEditor({
             contentEditable
             onInput={handleInput}
             onBlur={handleInput}
+            onKeyUp={updateActiveStates}
+            onMouseUp={updateActiveStates}
+            onClick={updateActiveStates}
             onKeyDown={handleKeyDown}
             className="prose prose-emerald max-w-none p-4 min-h-[280px] focus:outline-none bg-background text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 [&_li]:my-1 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:font-heading [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:text-foreground [&_h3]:text-xl [&_h3]:font-bold [&_h3]:font-heading [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-foreground [&_p]:mb-4 [&_p]:leading-relaxed"
             style={{ minHeight: "280px" }}
