@@ -168,22 +168,61 @@ export function RichTextEditor({
     handleInput();
   };
 
-  // Toggle Heading (H2 / H3) or convert back to paragraph
+  // Toggle Heading (H2 / H3) specifically for highlighted text or line block
   const toggleHeading = (tag: "h2" | "h3") => {
     if (!editorRef.current) return;
     editorRef.current.focus();
 
-    const isCurrentActive = tag === "h2" ? activeStates.h2 : activeStates.h3;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
 
-    if (isCurrentActive) {
-      // Toggle OFF back to normal paragraph
+    const range = sel.getRangeAt(0);
+    const selectedText = range.toString();
+
+    let parent: Node | null = range.commonAncestorContainer;
+    if (parent.nodeType === 3) parent = parent.parentElement;
+
+    let existingHeading: HTMLElement | null = null;
+    let curr = parent as HTMLElement | null;
+    while (curr && curr !== editorRef.current) {
+      if (curr.tagName === "H2" || curr.tagName === "H3") {
+        existingHeading = curr;
+        break;
+      }
+      curr = curr.parentElement;
+    }
+
+    if (existingHeading) {
+      // Toggle OFF: Unwrap heading element back to plain text
+      const parentEl = existingHeading.parentElement;
+      if (parentEl) {
+        while (existingHeading.firstChild) {
+          parentEl.insertBefore(existingHeading.firstChild, existingHeading);
+        }
+        parentEl.removeChild(existingHeading);
+      }
+    } else if (selectedText.trim().length > 0) {
+      // Wrap ONLY the highlighted text into heading tag
+      const headingEl = document.createElement(tag);
+      headingEl.className =
+        tag === "h2"
+          ? "font-heading font-bold text-2xl text-foreground my-3"
+          : "font-heading font-bold text-xl text-foreground my-2";
+
       try {
-        document.execCommand("formatBlock", false, "<P>");
+        range.surroundContents(headingEl);
       } catch {
-        document.execCommand("formatBlock", false, "p");
+        const html = range.cloneContents();
+        const div = document.createElement("div");
+        div.appendChild(html);
+        document.execCommand(
+          "insertHTML",
+          false,
+          `<${tag} class="${headingEl.className}">${div.innerHTML}</${tag}>`
+        );
       }
     } else {
-      // Toggle ON
+      // Full line block format if cursor is just placed on line
       try {
         document.execCommand("formatBlock", false, `<${tag.toUpperCase()}>`);
       } catch {
@@ -246,9 +285,10 @@ export function RichTextEditor({
         </button>
       </div>
 
-      <div className="border border-input rounded-2xl overflow-hidden bg-background shadow-xs focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
-        {/* WYSIWYG Toolbar */}
-        <div className="flex flex-wrap items-center gap-1 p-2 bg-muted/60 border-b border-border text-xs">
+      <div className="relative border border-input rounded-2xl overflow-hidden bg-background shadow-xs focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all max-h-[560px] flex flex-col">
+        
+        {/* STICKY TOP TOOLBAR */}
+        <div className="sticky top-0 z-20 flex flex-wrap items-center gap-1 p-2 bg-muted/95 backdrop-blur-xs border-b border-border text-xs shrink-0">
           {/* Quick Paragraph Formatter */}
           <Button
             type="button"
@@ -264,7 +304,7 @@ export function RichTextEditor({
 
           <div className="h-4 w-px bg-border mx-1" />
 
-          {/* Heading H2 & H3 Badges (Fixed Single Label) */}
+          {/* Heading H2 & H3 Badges */}
           <button
             type="button"
             onClick={() => toggleHeading("h2")}
@@ -273,7 +313,7 @@ export function RichTextEditor({
                 ? "bg-primary text-white shadow-xs ring-2 ring-primary/30"
                 : "hover:bg-background text-emerald-800 dark:text-emerald-400"
             }`}
-            title="Judul Utama (Heading 2) - Klik lagi untuk menonaktifkan"
+            title="Judul Utama (Heading 2) - Berlaku untuk teks terblok"
           >
             H2
           </button>
@@ -286,7 +326,7 @@ export function RichTextEditor({
                 ? "bg-primary text-white shadow-xs ring-2 ring-primary/30"
                 : "hover:bg-background text-emerald-800 dark:text-emerald-400"
             }`}
-            title="Subjudul (Heading 3) - Klik lagi untuk menonaktifkan"
+            title="Subjudul (Heading 3) - Berlaku untuk teks terblok"
           >
             H3
           </button>
@@ -416,13 +456,13 @@ export function RichTextEditor({
           </button>
         </div>
 
-        {/* Editor Body */}
+        {/* EDITOR SCROLLABLE BODY AREA */}
         {showCodeMode ? (
           <textarea
-            rows={12}
+            rows={14}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full p-4 text-xs font-mono bg-background text-foreground focus:outline-none leading-relaxed resize-y"
+            className="w-full p-4 text-xs font-mono bg-background text-foreground focus:outline-none leading-relaxed resize-y max-h-[480px] overflow-y-auto"
           />
         ) : (
           <div
@@ -434,7 +474,7 @@ export function RichTextEditor({
             onMouseUp={updateActiveStates}
             onClick={updateActiveStates}
             onKeyDown={handleKeyDown}
-            className="prose prose-emerald max-w-none p-4 min-h-[280px] focus:outline-none bg-background text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 [&_li]:my-1 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:font-heading [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:text-foreground [&_h3]:text-xl [&_h3]:font-bold [&_h3]:font-heading [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-foreground [&_p]:mb-4 [&_p]:leading-relaxed"
+            className="prose prose-emerald max-w-none p-4 min-h-[280px] max-h-[480px] overflow-y-auto focus:outline-none bg-background text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 [&_li]:my-1 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:font-heading [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:text-foreground [&_h3]:text-xl [&_h3]:font-bold [&_h3]:font-heading [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-foreground [&_p]:mb-4 [&_p]:leading-relaxed"
             style={{ minHeight: "280px" }}
           />
         )}
