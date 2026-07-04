@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
-import { Image as ImageIcon, PlusCircle, Trash2, Loader2 } from "lucide-react";
+import { Image as ImageIcon, PlusCircle, Trash2, Edit, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getGaleriList } from "@/lib/services/galeri";
-import { createDocument, deleteDocument } from "@/lib/services/konten";
+import { createDocument, updateDocument, deleteDocument } from "@/lib/services/konten";
 import { MultiImageUploader } from "@/components/admin/MultiImageUploader";
 import { Timestamp } from "firebase/firestore";
 import type { Galeri, JenjangId } from "@/types";
@@ -16,6 +16,7 @@ export default function AdminGaleriPage() {
   const [galeriList, setGaleriList] = useState<Galeri[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<Galeri | null>(null);
 
   const [judul, setJudul] = useState("");
   const [imagesUrl, setImagesUrl] = useState<string[]>([]);
@@ -40,7 +41,30 @@ export default function AdminGaleriPage() {
     if (profile) loadData();
   }, [profile, isYayasanAdmin]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setEditingItem(null);
+    setJudul("");
+    setImagesUrl([]);
+    setKeterangan("");
+    setSelectedJenjang("");
+  };
+
+  const handleOpenForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const handleEdit = (item: Galeri) => {
+    setEditingItem(item);
+    setJudul(item.judul || "");
+    const imgs = item.imagesUrl && item.imagesUrl.length > 0 ? item.imagesUrl : (item.imageUrl ? [item.imageUrl] : []);
+    setImagesUrl(imgs);
+    setKeterangan(item.keterangan || "");
+    setSelectedJenjang(item.jenjangId || "");
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (imagesUrl.length === 0) {
       alert("Harap unggah minimal 1 foto kegiatan.");
@@ -49,19 +73,32 @@ export default function AdminGaleriPage() {
     setSubmitting(true);
     try {
       const mainCoverUrl = imagesUrl[0];
-      await createDocument<Galeri>("galeri", {
-        judul,
-        imageUrl: mainCoverUrl,
-        imagesUrl: imagesUrl,
-        keterangan,
-        tanggal: Timestamp.now(),
-        jenjangId: selectedJenjang ? (selectedJenjang as JenjangId) : (isYayasanAdmin ? undefined : profile!.jenjangId),
-      });
+      const jenjang = selectedJenjang ? (selectedJenjang as JenjangId) : (isYayasanAdmin ? undefined : profile!.jenjangId);
+
+      if (editingItem) {
+        await updateDocument<Galeri>("galeri", editingItem.id, {
+          judul,
+          imageUrl: mainCoverUrl,
+          imagesUrl: imagesUrl,
+          keterangan,
+          jenjangId: jenjang,
+        });
+      } else {
+        await createDocument<Galeri>("galeri", {
+          judul,
+          imageUrl: mainCoverUrl,
+          imagesUrl: imagesUrl,
+          keterangan,
+          tanggal: Timestamp.now(),
+          jenjangId: jenjang,
+        });
+      }
+
       setShowForm(false);
-      setJudul(""); setImagesUrl([]); setKeterangan("");
+      resetForm();
       await loadData();
     } catch (err) {
-      alert("Gagal menambahkan galeri: " + (err as Error).message);
+      alert(`Gagal ${editingItem ? "memperbarui" : "menambahkan"} galeri: ` + (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -90,8 +127,15 @@ export default function AdminGaleriPage() {
         </div>
 
         <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto"
+          onClick={() => {
+            if (showForm) {
+              setShowForm(false);
+              resetForm();
+            } else {
+              handleOpenForm();
+            }
+          }}
+          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto cursor-pointer"
         >
           <PlusCircle className="w-4 h-4 mr-1.5" />
           <span>{showForm ? "Tutup Form" : "Tambah Album Galeri"}</span>
@@ -100,8 +144,10 @@ export default function AdminGaleriPage() {
 
       {showForm && (
         <Card className="p-6 border border-border bg-card shadow-md space-y-4">
-          <h2 className="font-heading font-bold text-lg text-foreground">Form Tambah Album Galeri</h2>
-          <form onSubmit={handleCreate} className="space-y-4">
+          <h2 className="font-heading font-bold text-lg text-foreground">
+            {editingItem ? "Form Edit Album Galeri" : "Form Tambah Album Galeri"}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
               <label className="text-xs font-semibold">Judul Kegiatan / Album Dokumentasi</label>
               <input
@@ -156,9 +202,17 @@ export default function AdminGaleriPage() {
               />
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setShowForm(false); resetForm(); }}
+                className="text-xs px-4 py-2 rounded-xl"
+              >
+                Batal
+              </Button>
               <Button type="submit" disabled={submitting} className="bg-primary text-white text-xs px-6 py-2 rounded-xl">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : "Simpan Album Galeri"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : (editingItem ? "Perbarui Album" : "Simpan Album Galeri")}
               </Button>
             </div>
           </form>
@@ -183,16 +237,19 @@ export default function AdminGaleriPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {galeriList.map((item) => {
-                const totalPhotos = item.imagesUrl && item.imagesUrl.length > 0 ? item.imagesUrl.length : 1;
+                const totalPhotos = item.imagesUrl && item.imagesUrl.length > 0 ? item.imagesUrl.length : (item.imageUrl ? 1 : 0);
                 return (
-                  <tr key={item.id}>
+                  <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                     <td className="p-3 font-semibold">{item.judul}</td>
                     <td className="p-3 font-bold uppercase">{item.jenjangId || "YAYASAN"}</td>
                     <td className="p-3 font-mono font-bold text-emerald-700 dark:text-emerald-400">
                       📷 {totalPhotos} Foto
                     </td>
-                    <td className="p-3 text-right">
-                      <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive">
+                    <td className="p-3 text-right space-x-2">
+                      <Button variant="outline" size="xs" onClick={() => handleEdit(item)} className="text-primary hover:bg-primary/10 border-primary/20 cursor-pointer">
+                        <Edit className="w-3 h-3 mr-1" /> Edit
+                      </Button>
+                      <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10 border-destructive/20 cursor-pointer">
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     </td>

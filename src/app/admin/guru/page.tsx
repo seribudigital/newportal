@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
-import { Users, Trash2, PlusCircle, Loader2, Award } from "lucide-react";
+import { Users, Trash2, Edit, PlusCircle, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getGuruList, createGuru, deleteGuru } from "@/lib/services/guru";
+import { updateDocument } from "@/lib/services/konten";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import type { Guru, JenjangId } from "@/types";
 
@@ -14,6 +15,7 @@ export default function AdminGuruPage() {
   const [guruList, setGuruList] = useState<Guru[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<Guru | null>(null);
 
   // Form states
   const [nama, setNama] = useState("");
@@ -40,22 +42,59 @@ export default function AdminGuruPage() {
     if (profile) loadData();
   }, [profile, isYayasanAdmin]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setEditingItem(null);
+    setNama("");
+    setJabatan("");
+    setMataPelajaran("");
+    setFotoUrl("");
+    setSelectedJenjang(profile?.jenjangId || "sdit");
+  };
+
+  const handleOpenForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const handleEdit = (item: Guru) => {
+    setEditingItem(item);
+    setNama(item.nama || "");
+    setJabatan(item.jabatan || "");
+    setMataPelajaran(item.mataPelajaran || "");
+    setFotoUrl(item.fotoUrl || "");
+    setSelectedJenjang(item.jenjangId || profile?.jenjangId || "sdit");
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await createGuru({
-        nama,
-        jabatan,
-        mataPelajaran,
-        fotoUrl,
-        jenjangId: isYayasanAdmin ? selectedJenjang : profile!.jenjangId!,
-      });
+      const jenjang = isYayasanAdmin ? selectedJenjang : profile!.jenjangId!;
+
+      if (editingItem) {
+        await updateDocument<Guru>("guru", editingItem.id, {
+          nama,
+          jabatan,
+          mataPelajaran,
+          fotoUrl,
+          jenjangId: jenjang,
+        });
+      } else {
+        await createGuru({
+          nama,
+          jabatan,
+          mataPelajaran,
+          fotoUrl,
+          jenjangId: jenjang,
+        });
+      }
+
       setShowForm(false);
-      setNama(""); setJabatan(""); setMataPelajaran(""); setFotoUrl("");
+      resetForm();
       await loadData();
     } catch (err) {
-      alert("Gagal menambahkan guru: " + (err as Error).message);
+      alert(`Gagal ${editingItem ? "memperbarui" : "menambahkan"} guru: ` + (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -84,8 +123,15 @@ export default function AdminGuruPage() {
         </div>
 
         <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto"
+          onClick={() => {
+            if (showForm) {
+              setShowForm(false);
+              resetForm();
+            } else {
+              handleOpenForm();
+            }
+          }}
+          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto cursor-pointer"
         >
           <PlusCircle className="w-4 h-4 mr-1.5" />
           <span>{showForm ? "Tutup Form" : "Tambah Guru Baru"}</span>
@@ -94,8 +140,10 @@ export default function AdminGuruPage() {
 
       {showForm && (
         <Card className="p-6 border border-border bg-card shadow-md space-y-4">
-          <h2 className="font-heading font-bold text-lg text-foreground">Form Tambah Guru Baru</h2>
-          <form onSubmit={handleCreate} className="space-y-4">
+          <h2 className="font-heading font-bold text-lg text-foreground">
+            {editingItem ? "Form Edit Data Guru" : "Form Tambah Guru Baru"}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-semibold">Nama Lengkap & Gelar</label>
@@ -166,9 +214,17 @@ export default function AdminGuruPage() {
               label="Foto Profil Guru"
             />
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setShowForm(false); resetForm(); }}
+                className="text-xs px-4 py-2 rounded-xl"
+              >
+                Batal
+              </Button>
               <Button type="submit" disabled={submitting} className="bg-primary text-white text-xs px-6 py-2 rounded-xl">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : "Simpan Guru"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : (editingItem ? "Perbarui Data Guru" : "Simpan Guru")}
               </Button>
             </div>
           </form>
@@ -194,13 +250,16 @@ export default function AdminGuruPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {guruList.map((item) => (
-                <tr key={item.id}>
+                <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                   <td className="p-3 font-semibold">{item.nama}</td>
                   <td className="p-3">{item.jabatan}</td>
                   <td className="p-3">{item.mataPelajaran}</td>
                   <td className="p-3 font-bold uppercase">{item.jenjangId}</td>
-                  <td className="p-3 text-right">
-                    <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive">
+                  <td className="p-3 text-right space-x-2">
+                    <Button variant="outline" size="xs" onClick={() => handleEdit(item)} className="text-primary hover:bg-primary/10 border-primary/20 cursor-pointer">
+                      <Edit className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                    <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10 border-destructive/20 cursor-pointer">
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </td>

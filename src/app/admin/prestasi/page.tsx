@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
-import { Trophy, PlusCircle, Trash2, Loader2 } from "lucide-react";
+import { Trophy, PlusCircle, Trash2, Edit, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getPrestasiList } from "@/lib/services/publikExtra";
-import { createDocument, deleteDocument } from "@/lib/services/konten";
+import { createDocument, updateDocument, deleteDocument } from "@/lib/services/konten";
 import type { Prestasi, JenjangId } from "@/types";
 
 export default function AdminPrestasiPage() {
@@ -14,6 +14,7 @@ export default function AdminPrestasiPage() {
   const [prestasiList, setPrestasiList] = useState<Prestasi[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<Prestasi | null>(null);
 
   const [judul, setJudul] = useState("");
   const [pemenang, setPemenang] = useState("");
@@ -39,22 +40,59 @@ export default function AdminPrestasiPage() {
     if (profile) loadData();
   }, [profile, isYayasanAdmin]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setEditingItem(null);
+    setJudul("");
+    setPemenang("");
+    setTingkat("Nasional");
+    setTahun("2025");
+    setSelectedJenjang(profile?.jenjangId || "sdit");
+  };
+
+  const handleOpenForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const handleEdit = (item: Prestasi) => {
+    setEditingItem(item);
+    setJudul(item.judul || "");
+    setPemenang(item.pemenang || "");
+    setTingkat(item.tingkat || "Nasional");
+    setTahun(item.tahun || "2025");
+    setSelectedJenjang(item.jenjangId || profile?.jenjangId || "sdit");
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await createDocument<Prestasi>("prestasi", {
-        judul,
-        pemenang,
-        tingkat,
-        tahun,
-        jenjangId: isYayasanAdmin ? selectedJenjang : profile!.jenjangId!,
-      });
+      const jenjang = isYayasanAdmin ? selectedJenjang : profile!.jenjangId!;
+
+      if (editingItem) {
+        await updateDocument<Prestasi>("prestasi", editingItem.id, {
+          judul,
+          pemenang,
+          tingkat,
+          tahun,
+          jenjangId: jenjang,
+        });
+      } else {
+        await createDocument<Prestasi>("prestasi", {
+          judul,
+          pemenang,
+          tingkat,
+          tahun,
+          jenjangId: jenjang,
+        });
+      }
+
       setShowForm(false);
-      setJudul(""); setPemenang("");
+      resetForm();
       await loadData();
     } catch (err) {
-      alert("Gagal menambahkan prestasi: " + (err as Error).message);
+      alert(`Gagal ${editingItem ? "memperbarui" : "menambahkan"} prestasi: ` + (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -83,8 +121,15 @@ export default function AdminPrestasiPage() {
         </div>
 
         <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto"
+          onClick={() => {
+            if (showForm) {
+              setShowForm(false);
+              resetForm();
+            } else {
+              handleOpenForm();
+            }
+          }}
+          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto cursor-pointer"
         >
           <PlusCircle className="w-4 h-4 mr-1.5" />
           <span>{showForm ? "Tutup Form" : "Tambah Prestasi"}</span>
@@ -93,8 +138,10 @@ export default function AdminPrestasiPage() {
 
       {showForm && (
         <Card className="p-6 border border-border bg-card shadow-md space-y-4">
-          <h2 className="font-heading font-bold text-lg text-foreground">Form Tambah Prestasi Baru</h2>
-          <form onSubmit={handleCreate} className="space-y-4">
+          <h2 className="font-heading font-bold text-lg text-foreground">
+            {editingItem ? "Form Edit Data Prestasi" : "Form Tambah Prestasi Baru"}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-semibold">Judul Kejuaraan</label>
@@ -172,9 +219,17 @@ export default function AdminPrestasiPage() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setShowForm(false); resetForm(); }}
+                className="text-xs px-4 py-2 rounded-xl"
+              >
+                Batal
+              </Button>
               <Button type="submit" disabled={submitting} className="bg-primary text-white text-xs px-6 py-2 rounded-xl">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : "Simpan Prestasi"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : (editingItem ? "Perbarui Prestasi" : "Simpan Prestasi")}
               </Button>
             </div>
           </form>
@@ -201,14 +256,17 @@ export default function AdminPrestasiPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {prestasiList.map((item) => (
-                <tr key={item.id}>
+                <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                   <td className="p-3 font-semibold">{item.judul}</td>
                   <td className="p-3">{item.pemenang}</td>
                   <td className="p-3 font-bold text-gold-600">{item.tingkat}</td>
                   <td className="p-3">{item.tahun}</td>
                   <td className="p-3 font-bold uppercase">{item.jenjangId}</td>
-                  <td className="p-3 text-right">
-                    <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive">
+                  <td className="p-3 text-right space-x-2">
+                    <Button variant="outline" size="xs" onClick={() => handleEdit(item)} className="text-primary hover:bg-primary/10 border-primary/20 cursor-pointer">
+                      <Edit className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                    <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10 border-destructive/20 cursor-pointer">
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </td>

@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, MapPin, Clock, Filter, Sparkles } from "lucid
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Agenda, JenjangId } from "@/types";
+import { formatDate } from "@/lib/utils";
 
 interface AgendaClientContainerProps {
   agendaList: Agenda[];
@@ -96,9 +97,7 @@ export function AgendaClientContainer({ agendaList }: AgendaClientContainerProps
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredList.map((item) => {
-            const dateObj = item.tanggalMulai?.toDate 
-              ? item.tanggalMulai.toDate() 
-              : new Date(item.tanggalMulai as unknown as string);
+            const formattedDate = formatDate(item.tanggalMulai, true);
 
             return (
               <Card key={item.id} className="border border-border/80 shadow-xs hover:shadow-md transition-all bg-card flex flex-col justify-between">
@@ -123,11 +122,9 @@ export function AgendaClientContainer({ agendaList }: AgendaClientContainerProps
                   </p>
 
                   <div className="pt-3 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-semibold text-foreground">
-                    <div className="flex items-center gap-2 text-emerald-800">
+                    <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400">
                       <CalendarIcon className="w-4 h-4 text-gold-600 shrink-0" />
-                      <span>
-                        {dateObj ? dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
-                      </span>
+                      <span>{formattedDate}</span>
                     </div>
 
                     <div className="flex items-center gap-2 text-muted-foreground">

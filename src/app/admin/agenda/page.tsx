@@ -2,23 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
-import { Calendar, PlusCircle, Trash2, Loader2 } from "lucide-react";
+import { Calendar, PlusCircle, Trash2, Edit, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAgendaList } from "@/lib/services/agenda";
-import { createDocument, deleteDocument } from "@/lib/services/konten";
+import { createDocument, updateDocument, deleteDocument } from "@/lib/services/konten";
 import { Timestamp } from "firebase/firestore";
 import type { Agenda, JenjangId } from "@/types";
+import { formatDate, toDatetimeLocalString } from "@/lib/utils";
 
 export default function AdminAgendaPage() {
   const { profile, isYayasanAdmin } = useAuth();
   const [agendaList, setAgendaList] = useState<Agenda[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<Agenda | null>(null);
 
   const [judul, setJudul] = useState("");
   const [lokasi, setLokasi] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
+  const [tanggalMulaiStr, setTanggalMulaiStr] = useState("");
+  const [tanggalSelesaiStr, setTanggalSelesaiStr] = useState("");
   const [selectedJenjang, setSelectedJenjang] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,23 +43,71 @@ export default function AdminAgendaPage() {
     if (profile) loadData();
   }, [profile, isYayasanAdmin]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setEditingItem(null);
+    setJudul("");
+    setLokasi("");
+    setDeskripsi("");
+    setTanggalMulaiStr("");
+    setTanggalSelesaiStr("");
+    setSelectedJenjang("");
+  };
+
+  const handleOpenForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const handleEdit = (item: Agenda) => {
+    setEditingItem(item);
+    setJudul(item.judul || "");
+    setLokasi(item.lokasi || "");
+    setDeskripsi(item.deskripsi || "");
+    setTanggalMulaiStr(toDatetimeLocalString(item.tanggalMulai));
+    setTanggalSelesaiStr(toDatetimeLocalString(item.tanggalSelesai));
+    setSelectedJenjang(item.jenjangId || "");
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tanggalMulaiStr) {
+      alert("Harap pilih tanggal dan waktu mulai kegiatan.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await createDocument<Agenda>("agenda", {
-        judul,
-        lokasi,
-        deskripsi,
-        tanggalMulai: Timestamp.now(),
-        status: "published",
-        jenjangId: selectedJenjang ? (selectedJenjang as JenjangId) : (isYayasanAdmin ? undefined : profile!.jenjangId),
-      });
+      const startTimestamp = Timestamp.fromDate(new Date(tanggalMulaiStr));
+      const endTimestamp = tanggalSelesaiStr ? Timestamp.fromDate(new Date(tanggalSelesaiStr)) : undefined;
+      const jenjang = selectedJenjang ? (selectedJenjang as JenjangId) : (isYayasanAdmin ? undefined : profile!.jenjangId);
+
+      if (editingItem) {
+        await updateDocument<Agenda>("agenda", editingItem.id, {
+          judul,
+          lokasi,
+          deskripsi,
+          tanggalMulai: startTimestamp,
+          ...(endTimestamp ? { tanggalSelesai: endTimestamp } : {}),
+          jenjangId: jenjang,
+        });
+      } else {
+        await createDocument<Agenda>("agenda", {
+          judul,
+          lokasi,
+          deskripsi,
+          tanggalMulai: startTimestamp,
+          ...(endTimestamp ? { tanggalSelesai: endTimestamp } : {}),
+          status: "published",
+          jenjangId: jenjang,
+        });
+      }
+
       setShowForm(false);
-      setJudul(""); setLokasi(""); setDeskripsi("");
+      resetForm();
       await loadData();
     } catch (err) {
-      alert("Gagal menambahkan agenda: " + (err as Error).message);
+      alert(`Gagal ${editingItem ? "memperbarui" : "menambahkan"} agenda: ` + (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -84,8 +136,15 @@ export default function AdminAgendaPage() {
         </div>
 
         <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto"
+          onClick={() => {
+            if (showForm) {
+              setShowForm(false);
+              resetForm();
+            } else {
+              handleOpenForm();
+            }
+          }}
+          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto cursor-pointer"
         >
           <PlusCircle className="w-4 h-4 mr-1.5" />
           <span>{showForm ? "Tutup Form" : "Tambah Agenda Baru"}</span>
@@ -94,8 +153,10 @@ export default function AdminAgendaPage() {
 
       {showForm && (
         <Card className="p-6 border border-border bg-card shadow-md space-y-4">
-          <h2 className="font-heading font-bold text-lg text-foreground">Form Tambah Agenda Baru</h2>
-          <form onSubmit={handleCreate} className="space-y-4">
+          <h2 className="font-heading font-bold text-lg text-foreground">
+            {editingItem ? "Form Edit Agenda" : "Form Tambah Agenda Baru"}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-semibold">Judul Kegiatan</label>
@@ -116,7 +177,30 @@ export default function AdminAgendaPage() {
                   required
                   value={lokasi}
                   onChange={(e) => setLokasi(e.target.value)}
-                  placeholder="Aula Utama Yayasan"
+                  placeholder="Aula Utama Yayasan / Lab TIK"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-input bg-background"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold">Tanggal & Waktu Mulai</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={tanggalMulaiStr}
+                  onChange={(e) => setTanggalMulaiStr(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-input bg-background"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold">Tanggal & Waktu Selesai (Opsional)</label>
+                <input
+                  type="datetime-local"
+                  value={tanggalSelesaiStr}
+                  onChange={(e) => setTanggalSelesaiStr(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-input bg-background"
                 />
               </div>
@@ -153,13 +237,22 @@ export default function AdminAgendaPage() {
                 required
                 value={deskripsi}
                 onChange={(e) => setDeskripsi(e.target.value)}
+                placeholder="Rincian agenda kegiatan..."
                 className="w-full px-3 py-2 text-xs rounded-xl border border-input bg-background"
               />
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setShowForm(false); resetForm(); }}
+                className="text-xs px-4 py-2 rounded-xl"
+              >
+                Batal
+              </Button>
               <Button type="submit" disabled={submitting} className="bg-primary text-white text-xs px-6 py-2 rounded-xl">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : "Simpan Agenda"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : (editingItem ? "Perbarui Agenda" : "Simpan Agenda")}
               </Button>
             </div>
           </form>
@@ -177,6 +270,7 @@ export default function AdminAgendaPage() {
             <thead className="bg-muted/50 font-bold uppercase border-b">
               <tr>
                 <th className="p-3">Judul Agenda</th>
+                <th className="p-3">Tanggal & Waktu</th>
                 <th className="p-3">Lokasi</th>
                 <th className="p-3">Jenjang</th>
                 <th className="p-3 text-right">Aksi</th>
@@ -184,12 +278,18 @@ export default function AdminAgendaPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {agendaList.map((item) => (
-                <tr key={item.id}>
+                <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                   <td className="p-3 font-semibold">{item.judul}</td>
+                  <td className="p-3 font-medium text-emerald-800 dark:text-emerald-400">
+                    {formatDate(item.tanggalMulai, true)}
+                  </td>
                   <td className="p-3">{item.lokasi}</td>
                   <td className="p-3 font-bold uppercase">{item.jenjangId || "YAYASAN"}</td>
-                  <td className="p-3 text-right">
-                    <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive">
+                  <td className="p-3 text-right space-x-2">
+                    <Button variant="outline" size="xs" onClick={() => handleEdit(item)} className="text-primary hover:bg-primary/10 border-primary/20 cursor-pointer">
+                      <Edit className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                    <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10 border-destructive/20 cursor-pointer">
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </td>

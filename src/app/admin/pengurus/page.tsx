@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/authContext";
-import { UserCheck, PlusCircle, Trash2, Loader2 } from "lucide-react";
+import { UserCheck, PlusCircle, Trash2, Edit, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { getPengurusYayasan } from "@/lib/services/publikExtra";
-import { createDocument, deleteDocument } from "@/lib/services/konten";
+import { createDocument, updateDocument, deleteDocument } from "@/lib/services/konten";
 import type { Pengurus, JenjangId } from "@/types";
 
 export default function AdminPengurusPage() {
@@ -15,6 +15,7 @@ export default function AdminPengurusPage() {
   const [pengurusList, setPengurusList] = useState<Pengurus[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<Pengurus | null>(null);
 
   const [nama, setNama] = useState("");
   const [organisasi, setOrganisasi] = useState("Yayasan");
@@ -40,23 +41,63 @@ export default function AdminPengurusPage() {
     if (profile) loadData();
   }, [profile]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setEditingItem(null);
+    setNama("");
+    setOrganisasi("Yayasan");
+    setJabatan("");
+    setPeriode("2024 - 2029");
+    setFotoUrl("");
+    setSelectedJenjang("");
+  };
+
+  const handleOpenForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const handleEdit = (item: Pengurus) => {
+    setEditingItem(item);
+    setNama(item.nama || "");
+    setOrganisasi(item.organisasi || "Yayasan");
+    setJabatan(item.jabatan || "");
+    setPeriode(item.periode || "2024 - 2029");
+    setFotoUrl(item.fotoUrl || "");
+    setSelectedJenjang(item.jenjangId || "");
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await createDocument<Pengurus>("pengurus", {
-        nama,
-        organisasi,
-        jabatan,
-        periode,
-        fotoUrl,
-        jenjangId: selectedJenjang ? (selectedJenjang as JenjangId) : undefined,
-      });
+      const jenjang = selectedJenjang ? (selectedJenjang as JenjangId) : undefined;
+
+      if (editingItem) {
+        await updateDocument<Pengurus>("pengurus", editingItem.id, {
+          nama,
+          organisasi,
+          jabatan,
+          periode,
+          fotoUrl,
+          jenjangId: jenjang,
+        });
+      } else {
+        await createDocument<Pengurus>("pengurus", {
+          nama,
+          organisasi,
+          jabatan,
+          periode,
+          fotoUrl,
+          jenjangId: jenjang,
+        });
+      }
+
       setShowForm(false);
-      setNama(""); setJabatan(""); setFotoUrl("");
+      resetForm();
       await loadData();
     } catch (err) {
-      alert("Gagal menambahkan pengurus: " + (err as Error).message);
+      alert(`Gagal ${editingItem ? "memperbarui" : "menambahkan"} pengurus: ` + (err as Error).message);
     } finally {
       setSubmitting(false);
     }
@@ -85,8 +126,15 @@ export default function AdminPengurusPage() {
         </div>
 
         <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto"
+          onClick={() => {
+            if (showForm) {
+              setShowForm(false);
+              resetForm();
+            } else {
+              handleOpenForm();
+            }
+          }}
+          className="bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto cursor-pointer"
         >
           <PlusCircle className="w-4 h-4 mr-1.5" />
           <span>{showForm ? "Tutup Form" : "Tambah Pengurus"}</span>
@@ -95,8 +143,10 @@ export default function AdminPengurusPage() {
 
       {showForm && (
         <Card className="p-6 border border-border bg-card shadow-md space-y-4">
-          <h2 className="font-heading font-bold text-lg text-foreground">Form Tambah Pengurus</h2>
-          <form onSubmit={handleCreate} className="space-y-4">
+          <h2 className="font-heading font-bold text-lg text-foreground">
+            {editingItem ? "Form Edit Data Pengurus" : "Form Tambah Pengurus"}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-semibold">Nama Pengurus</label>
@@ -170,9 +220,17 @@ export default function AdminPengurusPage() {
               </select>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setShowForm(false); resetForm(); }}
+                className="text-xs px-4 py-2 rounded-xl"
+              >
+                Batal
+              </Button>
               <Button type="submit" disabled={submitting} className="bg-primary text-white text-xs px-6 py-2 rounded-xl">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : "Simpan Pengurus"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : (editingItem ? "Perbarui Pengurus" : "Simpan Pengurus")}
               </Button>
             </div>
           </form>
@@ -198,13 +256,16 @@ export default function AdminPengurusPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {pengurusList.map((item) => (
-                <tr key={item.id}>
+                <tr key={item.id} className="hover:bg-muted/30 transition-colors">
                   <td className="p-3 font-semibold">{item.nama}</td>
                   <td className="p-3">{item.organisasi}</td>
-                  <td className="p-3 font-semibold text-emerald-800">{item.jabatan}</td>
+                  <td className="p-3 font-semibold text-emerald-800 dark:text-emerald-400">{item.jabatan}</td>
                   <td className="p-3">{item.periode}</td>
-                  <td className="p-3 text-right">
-                    <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive">
+                  <td className="p-3 text-right space-x-2">
+                    <Button variant="outline" size="xs" onClick={() => handleEdit(item)} className="text-primary hover:bg-primary/10 border-primary/20 cursor-pointer">
+                      <Edit className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                    <Button variant="outline" size="xs" onClick={() => handleDelete(item.id)} className="text-destructive hover:bg-destructive/10 border-destructive/20 cursor-pointer">
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </td>
