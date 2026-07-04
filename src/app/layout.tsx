@@ -24,13 +24,13 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Portal Utama — Yayasan Islam Terpadu Al-Hikmah",
-    template: "%s | SIT Al-Hikmah",
+    default: "Portal Utama — Yayasan Islam Terpadu",
+    template: "%s | SIT",
   },
-  description: "Web Portal Resmi Yayasan Islam Terpadu Al-Hikmah. Menyelenggarakan pendidikan berkualitas terpadu dari jenjang TKIT, SDIT, MTs, hingga MA.",
+  description: "Web Portal Resmi Yayasan Islam Terpadu. Menyelenggarakan pendidikan berkualitas terpadu dari jenjang TKIT, SDIT, MTs, hingga MA.",
   keywords: [
     "Sekolah Islam Terpadu",
-    "SIT Al-Hikmah",
+    "SIT",
     "TKIT",
     "SDIT",
     "MTs",
@@ -39,20 +39,20 @@ export const metadata: Metadata = {
     "Pendidikan Islam Rabbani",
     "Tahfidz Al-Qur'an"
   ],
-  authors: [{ name: "Yayasan Islam Terpadu Al-Hikmah" }],
+  authors: [{ name: "Yayasan Islam Terpadu" }],
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://sit-portal.sch.id"),
   openGraph: {
-    title: "Portal Utama — Yayasan Islam Terpadu Al-Hikmah",
+    title: "Portal Utama — Yayasan Islam Terpadu",
     description: "Pendidikan Islam Terpadu Berintegrasi Sains, Adab, & Al-Qur'an untuk Jenjang TKIT, SDIT, MTs, dan MA.",
     url: "/",
-    siteName: "Portal SIT Al-Hikmah",
+    siteName: "Portal SIT",
     locale: "id_ID",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Portal Utama — Yayasan Islam Terpadu Al-Hikmah",
-    description: "Web Portal Resmi Yayasan Islam Terpadu Al-Hikmah — TKIT, SDIT, MTs, MA.",
+    title: "Portal Utama — Yayasan Islam Terpadu",
+    description: "Web Portal Resmi Yayasan Islam Terpadu — TKIT, SDIT, MTs, MA.",
   },
   robots: {
     index: true,

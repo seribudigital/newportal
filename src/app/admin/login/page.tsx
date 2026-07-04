@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
             Masuk Dashboard Admin
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
-            Portal Sekolah Islam Terpadu Al-Hikmah
+            Portal Sekolah Islam Terpadu
           </CardDescription>
         </CardHeader>
 

@@ -343,7 +343,7 @@ export function PPDBForm({ initialJenjangId = "sdit", onSuccess }: PPDBFormProps
               <label className="text-xs font-semibold text-foreground">Sekolah Asal / TK / SD Sebelumnya</label>
               <input
                 type="text"
-                placeholder="Contoh: TK Islam Terpadu Al-Hikmah"
+                placeholder="Contoh: TK Islam Terpadu"
                 value={calonSiswa.sekolahAsal || ""}
                 onChange={(e) => setCalonSiswa({ ...calonSiswa, sekolahAsal: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-600"

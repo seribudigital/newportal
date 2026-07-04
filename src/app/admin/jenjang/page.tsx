@@ -96,10 +96,10 @@ export default function AdminJenjangProfilPage() {
             onChange={(e) => setSelectedJenjangId(e.target.value as JenjangId)}
             className="px-3 py-1.5 text-xs rounded-lg border border-input bg-background font-bold uppercase"
           >
-            <option value="tkit">TKIT Al-Hikmah</option>
-            <option value="sdit">SDIT Al-Hikmah</option>
-            <option value="mts">MTs Al-Hikmah</option>
-            <option value="ma">MA Al-Hikmah</option>
+            <option value="tkit">TKIT</option>
+            <option value="sdit">SDIT</option>
+            <option value="mts">MTs</option>
+            <option value="ma">MA</option>
           </select>
         </div>
       )}
