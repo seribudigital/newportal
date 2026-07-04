@@ -8,6 +8,7 @@ import { ArrowLeft, Save, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/admin/ImageUploader";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { createBerita } from "@/lib/services/berita";
 import { Timestamp } from "firebase/firestore";
 import type { StatusKonten, JenjangId, Berita } from "@/types";
@@ -203,19 +204,13 @@ export default function AdminBeritaCreatePage() {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground">
-                Isi Berita (Mendukung Teks HTML) <span className="text-destructive">*</span>
-              </label>
-              <textarea
-                rows={8}
-                required
-                value={isi}
-                onChange={(e) => setIsi(e.target.value)}
-                placeholder="<p>Tulis paragraf berita lengkap di sini...</p>"
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-input bg-background font-mono focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
+            <RichTextEditor
+              value={isi}
+              onChange={setIsi}
+              label="Isi Berita Lengkap"
+              placeholder="Tuliskan isi berita lengkap di sini..."
+              required
+            />
 
             <div className="pt-2 flex justify-end">
               <Button
