@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { ShieldCheck, Target, HeartHandshake, Award, Users } from "lucide-react";
+import { ShieldCheck, Target, Users } from "lucide-react";
 import { getPengurusYayasan } from "@/lib/services/publikExtra";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { SafeImage } from "@/components/ui/SafeImage";
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: "Tentang Kami - Yayasan Islam Terpadu",
+  title: "Tentang Kami - Portal Sekolah Islam Terpadu",
   description: "Profil sejarah, visi-misi, dan susunan pengurus Yayasan Islam Terpadu.",
 };
 
@@ -66,7 +67,7 @@ export default async function TentangPage() {
           </Card>
         </div>
 
-        {/* Section 3: Organization Structure / Pengurus */}
+        {/* Section 3: Organization Structure / Live Pengurus from Firestore */}
         <div className="space-y-8">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="font-heading font-bold text-3xl text-foreground">
@@ -78,39 +79,39 @@ export default async function TentangPage() {
           </div>
 
           {pengurusList.length === 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <Card className="p-6 text-center border border-border">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xl flex items-center justify-center mx-auto mb-3">
-                  KH
-                </div>
-                <h3 className="font-heading font-bold text-lg">Dr. KH. Abdullah Ahmad, M.A.</h3>
-                <p className="text-xs text-emerald-700 font-semibold mt-1">Ketua Pembina Yayasan</p>
-              </Card>
-              <Card className="p-6 text-center border border-border">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xl flex items-center justify-center mx-auto mb-3">
-                  UA
-                </div>
-                <h3 className="font-heading font-bold text-lg">Ustadz H. Ahmad Ridwan, Lc.</h3>
-                <p className="text-xs text-emerald-700 font-semibold mt-1">Ketua Umum Yayasan</p>
-              </Card>
-              <Card className="p-6 text-center border border-border">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xl flex items-center justify-center mx-auto mb-3">
-                  H
-                </div>
-                <h3 className="font-heading font-bold text-lg">Hj. Maryam Mahmudah, S.Pd.</h3>
-                <p className="text-xs text-emerald-700 font-semibold mt-1">Bendahara Yayasan</p>
-              </Card>
+            <div className="text-center p-12 bg-card border border-dashed border-border rounded-2xl max-w-xl mx-auto">
+              <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-60" />
+              <p className="text-muted-foreground text-sm font-medium">
+                Belum ada data pengurus yayasan yang terdaftar. silakan tambahkan data melalui Dashboard Admin.
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {pengurusList.map((p) => (
-                <Card key={p.id} className="p-6 text-center border border-border shadow-xs">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xl flex items-center justify-center mx-auto mb-3">
-                    {p.nama.charAt(0)}
+                <Card key={p.id} className="p-6 text-center border border-border shadow-xs bg-card hover:shadow-md transition-all flex flex-col items-center justify-between space-y-4">
+                  <div className="space-y-3 flex flex-col items-center">
+                    {p.fotoUrl ? (
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-emerald-700/20 bg-emerald-950/10">
+                        <SafeImage src={p.fotoUrl} alt={p.nama} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 font-heading font-bold text-2xl flex items-center justify-center border border-emerald-900/10 shadow-xs">
+                        {p.nama.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+
+                    <div>
+                      <h3 className="font-heading font-bold text-lg text-foreground">{p.nama}</h3>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-400 font-bold mt-1 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200/50 inline-block">
+                        {p.jabatan}
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="font-heading font-bold text-lg text-foreground">{p.nama}</h3>
-                  <p className="text-xs text-emerald-700 font-semibold mt-1">{p.jabatan}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{p.organisasi} ({p.periode})</p>
+
+                  <div className="text-[11px] text-muted-foreground border-t border-border/60 pt-3 w-full">
+                    <span>{p.organisasi || "Yayasan"}</span>
+                    {p.periode && <span className="font-medium text-foreground"> • Periode {p.periode}</span>}
+                  </div>
                 </Card>
               ))}
             </div>
