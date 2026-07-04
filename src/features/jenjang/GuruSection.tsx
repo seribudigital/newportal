@@ -38,12 +38,12 @@ export function GuruSection({ guruList, jenjangNama }: GuruSectionProps) {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {guruList.map((guru) => (
               <Card key={guru.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all bg-card text-center group">
-                <div className="w-full h-48 bg-emerald-900/10 relative overflow-hidden">
+                <div className="w-full aspect-[3/4] bg-emerald-900/10 relative overflow-hidden">
                   <SafeImage
                     src={guru.fotoUrl}
                     alt={guru.nama}
                     fallbackText={guru.nama.charAt(0)}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
                 <CardContent className="p-4 space-y-1">
