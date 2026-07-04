@@ -37,20 +37,20 @@ export function GuruSection({ guruList, jenjangNama }: GuruSectionProps) {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {guruList.map((guru) => (
-              <Card key={guru.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all bg-card text-center group">
-                <div className="w-full aspect-[3/4] bg-emerald-900/10 relative overflow-hidden">
+              <Card key={guru.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all bg-card text-center group flex flex-col justify-between">
+                <div className="w-full aspect-[3/4] bg-gradient-to-b from-emerald-900/5 via-emerald-900/15 to-emerald-900/25 dark:from-emerald-950/30 dark:to-emerald-950/70 relative overflow-hidden flex items-center justify-center p-2 rounded-t-2xl">
                   <SafeImage
                     src={guru.fotoUrl}
                     alt={guru.nama}
                     fallbackText={guru.nama.charAt(0)}
-                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                    className="max-w-full max-h-full w-auto h-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300 rounded-xl"
                   />
                 </div>
                 <CardContent className="p-4 space-y-1">
                   <h3 className="font-heading font-bold text-base text-foreground leading-snug group-hover:text-primary transition-colors">
                     {guru.nama}
                   </h3>
-                  <p className="text-xs font-semibold text-emerald-700">
+                  <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                     {guru.jabatan}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
