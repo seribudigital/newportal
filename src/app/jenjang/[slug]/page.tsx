@@ -4,11 +4,12 @@ import { getSemuaJenjang, getJenjangBySlug } from "@/lib/services/jenjang";
 import { getGuruList } from "@/lib/services/guru";
 import { getGaleriList } from "@/lib/services/galeri";
 import { getCollectionByJenjang } from "@/lib/services/konten";
-import type { Program, JenjangId } from "@/types";
+import type { Program, Siswa, JenjangId } from "@/types";
 
 import { JenjangHero } from "@/features/jenjang/JenjangHero";
 import { ProgramSection } from "@/features/jenjang/ProgramSection";
 import { GuruSection } from "@/features/jenjang/GuruSection";
+import { SiswaSection } from "@/features/jenjang/SiswaSection";
 import { JenjangGaleri } from "@/features/jenjang/JenjangGaleri";
 
 export const revalidate = 60;
@@ -59,9 +60,10 @@ export default async function JenjangDetailPage({ params }: JenjangPageProps) {
   const jenjangId = jenjang.id as JenjangId;
 
   // Fetch data specifically filtered by jenjangId
-  const [programs, guruList, galeriList] = await Promise.all([
+  const [programs, guruList, siswaList, galeriList] = await Promise.all([
     getCollectionByJenjang<Program>("program", jenjangId).catch(() => []),
     getGuruList(jenjangId).catch(() => []),
+    getCollectionByJenjang<Siswa>("siswa", jenjangId).catch(() => []),
     getGaleriList(jenjangId).catch(() => []),
   ]);
 
@@ -76,7 +78,10 @@ export default async function JenjangDetailPage({ params }: JenjangPageProps) {
       {/* 3. Dewan Guru */}
       <GuruSection guruList={guruList} jenjangNama={jenjang.nama} />
 
-      {/* 4. Galeri Spesifik (#galeri anchor) */}
+      {/* 4. Direktori Santri & Siswa Aktif */}
+      <SiswaSection siswaList={siswaList} jenjangNama={jenjang.nama} />
+
+      {/* 5. Galeri Spesifik (#galeri anchor) */}
       <JenjangGaleri galeriList={galeriList} jenjangNama={jenjang.nama} />
     </main>
   );
