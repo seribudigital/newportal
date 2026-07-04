@@ -21,7 +21,7 @@ export function SafeHtmlRenderer({ html, className = "" }: SafeHtmlRendererProps
 
   return (
     <div
-      className={`prose prose-emerald max-w-none prose-p:leading-relaxed prose-p:mb-4 prose-headings:font-heading prose-headings:font-bold prose-headings:text-foreground ${className}`}
+      className={`prose prose-emerald max-w-none text-foreground leading-relaxed [&_p]:mb-4 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-3 [&_li]:my-1 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:font-heading [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:text-foreground [&_h3]:text-xl [&_h3]:font-bold [&_h3]:font-heading [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-foreground ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
     />
   );

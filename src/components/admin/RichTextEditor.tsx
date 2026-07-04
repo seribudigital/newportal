@@ -15,8 +15,9 @@ import {
   AlignJustify, 
   Wand2, 
   Code,
-  Sparkles,
-  RemoveFormatting
+  RemoveFormatting,
+  Indent,
+  Outdent
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -31,7 +32,7 @@ interface RichTextEditorProps {
 export function parseAndEnsureParagraphs(content: string): string {
   if (!content) return "";
   
-  // Check if string contains HTML tags like <p>, <div>, <h2>, <br>, <ul>, <li>, <b>, <i>, <u>, etc.
+  // Check if string contains HTML tags like <p>, <div>, <h2>, <h3>, <br>, <ul>, <ol>, <li>, <b>, <i>, <u>, etc.
   const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
   
   if (hasHtmlTags) {
@@ -91,9 +92,55 @@ export function RichTextEditor({
     handleInput();
   };
 
-  // Format paragraph block (h2, h3, p)
-  const formatBlock = (tag: string) => {
-    execCmd("formatBlock", tag);
+  // Format Heading (H2 / H3) reliably across browsers
+  const formatHeading = (tag: "h2" | "h3") => {
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+
+    try {
+      document.execCommand("formatBlock", false, `<${tag.toUpperCase()}>`);
+    } catch {
+      document.execCommand("formatBlock", false, tag);
+    }
+
+    // Fallback if node isn't converted
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      let node: Node | null = selection.getRangeAt(0).commonAncestorContainer;
+      if (node.nodeType === 3) node = node.parentElement;
+
+      if (node && node instanceof HTMLElement && editorRef.current.contains(node)) {
+        let block: HTMLElement = node;
+        while (
+          block.parentElement &&
+          block.parentElement !== editorRef.current &&
+          !["P", "DIV", "H1", "H2", "H3", "H4", "H5", "H6", "LI"].includes(block.tagName)
+        ) {
+          block = block.parentElement;
+        }
+
+        if (block && block !== editorRef.current && block.tagName !== tag.toUpperCase()) {
+          const newEl = document.createElement(tag);
+          newEl.innerHTML = block.innerHTML;
+          block.replaceWith(newEl);
+        }
+      }
+    }
+    handleInput();
+  };
+
+  // Handle Tab key for paragraph indent / tabulation
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (e.shiftKey) {
+        execCmd("outdent");
+      } else {
+        // Insert 4 non-breaking spaces for tab indent at cursor position
+        document.execCommand("insertHTML", false, "&nbsp;&nbsp;&nbsp;&nbsp;");
+        handleInput();
+      }
+    }
   };
 
   // Convert raw text to HTML paragraphs
@@ -145,32 +192,25 @@ export function RichTextEditor({
 
           <div className="h-4 w-px bg-border mx-1" />
 
-          {/* Heading Style Dropdown */}
+          {/* Heading H2 & H3 */}
           <button
             type="button"
-            onClick={() => formatBlock("p")}
-            className="p-1.5 px-2 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-xs font-semibold"
-            title="Paragraf Biasa"
-          >
-            Paragraf
-          </button>
-
-          <button
-            type="button"
-            onClick={() => formatBlock("h2")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-0.5"
+            onClick={() => formatHeading("h2")}
+            className="p-1.5 px-2 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1 font-bold text-xs"
             title="Judul Utama (Heading 2)"
           >
-            <Heading2 className="w-4 h-4" />
+            <Heading2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            <span>H2</span>
           </button>
 
           <button
             type="button"
-            onClick={() => formatBlock("h3")}
-            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-0.5"
+            onClick={() => formatHeading("h3")}
+            className="p-1.5 px-2 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1 font-bold text-xs"
             title="Subjudul (Heading 3)"
           >
-            <Heading3 className="w-4 h-4" />
+            <Heading3 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            <span>H3</span>
           </button>
 
           <div className="h-4 w-px bg-border mx-1" />
@@ -222,6 +262,28 @@ export function RichTextEditor({
             title="Daftar Angka (Numbered List)"
           >
             <ListOrdered className="w-4 h-4" />
+          </button>
+
+          <div className="h-4 w-px bg-border mx-1" />
+
+          {/* Tabulation / Indent / Outdent */}
+          <button
+            type="button"
+            onClick={() => execCmd("insertHTML", "&nbsp;&nbsp;&nbsp;&nbsp;")}
+            className="p-1.5 px-2 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1 font-semibold text-xs"
+            title="Masuk Paragraf / Tabulasi (Tab)"
+          >
+            <Indent className="w-4 h-4 text-emerald-700" />
+            <span>Tab</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => execCmd("outdent")}
+            className="p-1.5 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            title="Kembali Rata Kiri (Outdent)"
+          >
+            <Outdent className="w-4 h-4" />
           </button>
 
           <div className="h-4 w-px bg-border mx-1" />
@@ -290,7 +352,8 @@ export function RichTextEditor({
             contentEditable
             onInput={handleInput}
             onBlur={handleInput}
-            className="prose prose-emerald max-w-none p-4 min-h-[280px] focus:outline-none bg-background text-foreground leading-relaxed prose-p:mb-4 prose-headings:font-heading prose-headings:font-bold prose-headings:text-foreground"
+            onKeyDown={handleKeyDown}
+            className="prose prose-emerald max-w-none p-4 min-h-[280px] focus:outline-none bg-background text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 [&_li]:my-1 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:font-heading [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:text-foreground [&_h3]:text-xl [&_h3]:font-bold [&_h3]:font-heading [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-foreground [&_p]:mb-4 [&_p]:leading-relaxed"
             style={{ minHeight: "280px" }}
           />
         )}
