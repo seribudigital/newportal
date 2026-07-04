@@ -35,18 +35,20 @@ export function GuruSection({ guruList, jenjangNama }: GuruSectionProps) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
             {guruList.map((guru) => (
-              <Card key={guru.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all bg-card text-center group flex flex-col justify-between">
-                <div className="w-full aspect-square bg-muted/30 relative overflow-hidden rounded-t-2xl">
+              <Card key={guru.id} className="overflow-hidden border border-border/80 shadow-xs hover:shadow-lg transition-all bg-card text-center group flex flex-col justify-between h-full">
+                {/* Fixed 1:1 Square Frame Container */}
+                <div className="w-full aspect-square bg-emerald-950/10 dark:bg-emerald-950/30 relative overflow-hidden flex items-center justify-center p-3 shrink-0">
                   <SafeImage
                     src={guru.fotoUrl}
                     alt={guru.nama}
                     fallbackText={guru.nama.charAt(0)}
-                    className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                    className="max-w-full max-h-full w-auto h-auto object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-300 rounded-lg"
                   />
                 </div>
-                <CardContent className="p-4 space-y-1">
+                {/* Text Content */}
+                <CardContent className="p-4 space-y-1 flex-1 flex flex-col justify-center">
                   <h3 className="font-heading font-bold text-base text-foreground leading-snug group-hover:text-primary transition-colors">
                     {guru.nama}
                   </h3>
