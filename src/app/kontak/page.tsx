@@ -73,14 +73,15 @@ export default function KontakPage() {
               </div>
             </div>
 
-            {/* Embedded Google Maps Placeholder */}
-            <div className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden border border-border bg-emerald-950/10 relative">
+            {/* Embedded Google Maps SDIT AL-KHOIR */}
+            <div className="w-full h-72 sm:h-96 rounded-2xl overflow-hidden border border-border bg-emerald-950/10 relative shadow-xs">
               <iframe
-                title="Peta Lokasi Sekolah"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.521260322283!2d106.81956135000001!3d-6.194741399999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f5390917b759%3A0x6b45e6782db59a02!2sMonumen%20Nasional!5e0!3m2!1sid!2sid!4v1650000000000!5m2!1sid!2sid"
+                title="Peta Lokasi SDIT Al-Khoir"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1179.18135484714!2d106.34204797746784!3d-6.227097458813272!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e421cac70750925%3A0x61d080263a68db9b!2sSDIT%20AL-KHOIR!5e0!3m2!1sid!2sid!4v1783260951152!5m2!1sid!2sid"
                 className="w-full h-full border-0 grayscale hover:grayscale-0 transition-all duration-300"
                 allowFullScreen={false}
                 loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
               />
             </div>
 
