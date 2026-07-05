@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/authContext";
@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { WordImporter, type ImportedWordData } from "@/components/admin/WordImporter";
 import { createBerita } from "@/lib/services/berita";
 import { Timestamp } from "firebase/firestore";
 import type { StatusKonten, JenjangId, Berita } from "@/types";
@@ -27,6 +28,29 @@ export default function AdminBeritaCreatePage() {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("draft_word_import");
+      if (stored) {
+        const parsed: ImportedWordData = JSON.parse(stored);
+        setJudul(parsed.judul);
+        setSlug(parsed.slug);
+        setRingkasan(parsed.ringkasan);
+        setIsi(parsed.isi);
+        sessionStorage.removeItem("draft_word_import");
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleWordImport = (imported: ImportedWordData) => {
+    setJudul(imported.judul);
+    setSlug(imported.slug);
+    setRingkasan(imported.ringkasan);
+    setIsi(imported.isi);
+  };
 
   const handleJudulChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -93,7 +117,7 @@ export default function AdminBeritaCreatePage() {
         <span>Kembali ke Daftar Berita</span>
       </Link>
 
-      <div className="flex items-center justify-between pb-4 border-b border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
           <h1 className="font-heading font-bold text-2xl md:text-3xl text-foreground">
             Tulis Berita Baru
@@ -102,6 +126,8 @@ export default function AdminBeritaCreatePage() {
             Publikasikan pengumuman atau kabar berita sekolah
           </p>
         </div>
+
+        <WordImporter onImport={handleWordImport} />
       </div>
 
       <Card className="border border-border/80 shadow-md bg-card">

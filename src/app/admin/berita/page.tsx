@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import { 
   PlusCircle, 
@@ -14,14 +15,25 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { WordImporter, type ImportedWordData } from "@/components/admin/WordImporter";
 import { getBeritaList, deleteBerita } from "@/lib/services/berita";
 import type { Berita } from "@/types";
 
 export default function AdminBeritaListPage() {
   const { profile, isYayasanAdmin } = useAuth();
+  const router = useRouter();
   const [beritaList, setBeritaList] = useState<Berita[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleWordImport = (imported: ImportedWordData) => {
+    try {
+      sessionStorage.setItem("draft_word_import", JSON.stringify(imported));
+      router.push("/admin/berita/new");
+    } catch {
+      router.push("/admin/berita/new");
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -68,13 +80,17 @@ export default function AdminBeritaListPage() {
           </p>
         </div>
 
-        <Link
-          href="/admin/berita/new"
-          className={buttonVariants({ variant: "default" }) + " bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm self-start sm:self-auto flex items-center gap-1.5"}
-        >
-          <PlusCircle className="w-4 h-4" />
-          <span>Tambah Berita Baru</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          <WordImporter onImport={handleWordImport} />
+
+          <Link
+            href="/admin/berita/new"
+            className={buttonVariants({ variant: "default" }) + " bg-primary hover:bg-emerald-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5"}
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Tambah Berita Baru</span>
+          </Link>
+        </div>
       </div>
 
       {/* Content List Table */}

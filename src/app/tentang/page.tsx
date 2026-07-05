@@ -4,7 +4,7 @@ import { getPengurusYayasan } from "@/lib/services/publikExtra";
 import { Card } from "@/components/ui/card";
 import { SafeImage } from "@/components/ui/SafeImage";
 
-export const revalidate = 0;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Tentang Kami - Portal Sekolah Islam Terpadu",

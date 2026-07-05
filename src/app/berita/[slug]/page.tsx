@@ -6,7 +6,7 @@ import { getBeritaList, getBeritaBySlug } from "@/lib/services/berita";
 import { SafeHtmlRenderer } from "@/components/ui/SafeHtmlRenderer";
 import { SafeImage } from "@/components/ui/SafeImage";
 
-export const revalidate = 0;
+export const revalidate = 60;
 export const dynamicParams = true;
 
 interface BeritaDetailPageProps {
